@@ -3,15 +3,14 @@ import Vuex from "vuex";
 
 Vue.use(Vuex)
 
-const state = {}
-const mutations = {}
-const actions = {}
-const getters = {}
+import search from "./search";
+import home from "./home";
 
-
-export default Vuex.Store({
-    state,
-    mutations,
-    actions,
-    getters,
+const store = new Vuex.Store({
+    modules: {
+        search,
+        home
+    }
 })
+
+export default store
