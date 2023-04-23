@@ -516,7 +516,7 @@ export default {
 三种方式
 
 - :hover
-- v-show
+- v-show（这个不太对，解决一下）
 - display: currentIndex == index ? block : none
 
 #### 延时卡顿现象
@@ -786,4 +786,179 @@ window.addEventListener('scroll', throttled(handleScroll, 500));
 
 
 
-### 哈哈
+### TypeNav组件路由跳转与传递参数
+
+描述：该组件共有三级菜单，鼠标悬浮一级菜单时需要展示一级标题对应的二三级内容；点击分类时，Home跳转到Search模块，路由跳转时传递产品名称、ID等。
+
+#### 路由跳转
+
+- 声明式导航：router-link
+- 编程式导航：push|replace
+
+#### 路由跳转的选择
+
+- 这里选择编程式导航。因为使用声明式导航，这里会渲染巨多的router-link，会出现卡顿。（尽量不要操作DOM层）
+- 利用事件委托+编程式导航处理跳转。因为给每个a标签绑定methods依然是一种很吃性能的方式。
+
+##### 事件委托有几个问题
+
+- 如何才能实现只有点击a的时候才进行路由跳转
+- 如何区分点击的是一二三级标签
+
+##### 解决
+
+自定义属性+事件委托+编程式导航
+
+给三个a标签内添加自定义属性（分支名，分支级别），点击时，即可通过判断节点dataset中有无这些属性来给路由配置路径和参数。
+
+```vue
+<a :data-categoryName = "c1.categoryName" :data-category1Id = "c1.categoryId">{{ c1.categoryName }}</a>
+<a :data-categoryName = "c2.categoryName" :data-category2Id = "c2.categoryId">{{ c2.categoryName }}</a>
+<a :data-categoryName = "c3.categoryName" :data-category3Id = "c3.categoryId">{{ c3.categoryName }}</a>
+```
+
+```js
+goSearch(event) {
+    // 编程式导航+事件委托
+    // 可以获取节点以及节点上的dataCategoryName，我们需要筛选带着dataCategoryName参数的a标签√，并且确认好标签级别
+    let element = event.target
+    let { categoryname, category1id, category2id, category3id } = element.dataset
+    if (categoryname) {
+        let location = { name: 'search' }
+        let query = { categoryName: categoryname }
+
+        if (category1id) {
+            query.category1Id = category1id
+        } else if (category2id) {
+            query.category1Id = category2id
+        } else if (category3id) {
+            query.category3Id = category3id
+        }
+        location.query = query
+        this.$router.push(location)
+    }
+}
+```
+
+
+
+### Search模块中商品分类和过渡动画
+
+主要就是事件委托问题，应该想好绑定事件放在哪个节点上
+
+↑好好想一下这个逻辑，更加合理地显示和隐藏↓
+
+#### 商品分类
+
+##### 预期效果
+
+- 主页面，让TypeNav组件的一级分类一直显示。
+- search页面，让TypeNav在鼠标进入“全部商品分类”的时候显示一级分类。
+- 主页面，鼠标进入各一级分类时，显示二三级内容；search页面，也是这样。
+- 主页面，鼠标移出container的时候不再显示二三级；search页面，不再显示TypeNav一级组件。
+
+##### 放置思路
+
+我暂时想不到更简洁的实现方法，相当于针对这两种情况写了两组判定↓
+
+- 首先是contianer中加一个`mouseleave`事件。当search页面中鼠标划出这里时，TypeNav一级组件隐藏掉（这里有个坑，就是如果鼠标移出分类区但是留在nav区，还是显示的，所以需要下一面一个mouseleave填坑）；
+- 其次是“全部商品分类”的`h2`标签中加一个`mouseenter`事件。search页面中，当鼠标移入标签，一级分类显示；
+- 然后是在sort区域（一二三级分类）添加一个`mouseleave`事件。当鼠标离开这个区域，主页面不显示二三级，且给currentindex赋值为`-1`，search页面不显示一二三级（如果移出不是停在“全部商品分类”上）；
+- 最为关键的一步是在一级分类标签`h3`中加一个`mouseenter`事件。这是之前实现的鼠标移在各个一级分类标题上时，先获取当前的index值`currentIndex`，以便给标题一个选中背景样式，并且显示对应的二三级内容（这里是用的`:style`绑定`display`样式）。
+
+这么一写，确实有些复杂。但是它能实现我对于三级联动显示与隐藏的需求。那么是否还有更好的解决办法呢？？？？？
+
+##### 代码实现
+
+```vue
+<div class="container" @mouseleave="leaveShow">
+    <h2 class="all" @mouseenter="enterShow">全部商品分类</h2>
+    <nav class="nav">...</nav>
+    <div class="sort" v-show="show">
+        <div class="all-sort-list2" @click="goSearch" @mouseleave="leaveIndex">
+            <div class="item" v-for="(c1, index) in categoryList" :key="c1.categoryId" :class="{cur: currentIndex == index}">
+                <h3 @mouseenter="changeIndex(index)">...一级内容</h3>
+                <div class="item-list clearfix" :style="{display: currentIndex == index ? 'block' : 'none'}">
+                    <div class="subitem" v-for="c2 in c1.categoryChild" :key="c2.categoryId">
+                        <dl class="fore">...二三级内容</dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    ...
+	methods: {
+        changeIndex: throttle(function(index) {
+            this.currentIndex = index
+        }, 10),
+        leaveIndex() {
+            this.currentIndex = -1
+            if (this.$route.name === 'search') {
+                this.show = false
+            }
+        },
+            
+        enterShow() {
+            this.show = true
+        },
+        leaveShow() {
+            if (this.$route.name == 'search') {
+                this.show = false
+            }
+        },
+    }
+</script>
+```
+
+#### 过渡动画
+
+>  前提是组件/元素务必要有v-if/v-show指令。
+
+#### 代码实现
+
+```vue
+<template>
+	<transition name = "sort">
+        把要搞动画的元素包起来
+    </transition>
+</template>
+<style>
+    ...
+    .sort {...}
+    // Vue2 Vue3 注意写法不一样，建议看到这里就回想一下
+    .sort-enter {
+        height: 0px;
+    }
+
+    .sort-enter-to {
+        height: 461px;
+    }
+
+    .sort-enter-active {
+        transition: all .5s; // 过渡全部元素，设置0.5s
+        overflow: hidden; // 防止字先出来，背景慢慢出来
+    }
+</style>
+```
+
+
+
+### 合并参数
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

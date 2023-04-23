@@ -7,6 +7,7 @@ const state = {
 const actions = {
     async categoryList({commit}) {
         let result = await reqCategoryList()
+        console.log("请求获取到的内容↓", result)
         if (result.status === 200) {
             commit("CATEGORYLIST", result.data)
         }
