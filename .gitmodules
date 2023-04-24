@@ -1,0 +1,4 @@
+[submodule "docs/SHOPPING"]
+	path = docs/SHOPPING
+	url = https://github.com/Ra-Liz/SHOPPING.git
+	branch = main
