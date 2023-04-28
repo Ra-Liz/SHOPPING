@@ -7,6 +7,8 @@ Vue.component(TypeNav.name, TypeNav)
 import router from './router'
 // 仓库
 import store from './store'
+// mock数据
+import '@/mock/mockServe'
 
 Vue.config.productionTip = false
 

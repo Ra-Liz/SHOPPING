@@ -99,7 +99,10 @@ export default {
                 } else if (category3id) {
                     query.category3Id = category3id
                 }
+                
                 location.query = query
+                location.params = this.$route.params
+
                 this.$router.push(location)
             }
         }

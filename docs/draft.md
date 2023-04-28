@@ -1,5 +1,7 @@
 # shop_app 随行笔记（前台）
 
+
+
 ## 路由传参问题
 
 ### 搜索栏输入keyword后进行搜索跳转
@@ -921,15 +923,144 @@ goSearch(event) {
 
 ## 合并参数
 
+讲真我不是很明白这到底是个什么业务，为什么分类和搜索的参数要合并在一起。
+
+它是这样表述的：search模块的路由传参只有name和params，TypeNav模块的路由传参只有name和query。当我已经输入关键词查找后，点击分类，路由应该保留我的params；当我点击分类后查找，路由应该保留我的query。因此，要在TypeNav和Search相关实现中进行路由传参（name, params, query）的合并。
+
+以下是代码实现↓
+
+```js
+// Header/index.vue (Search)
+goSearch() {
+    // koko
+    let location = { name: "search", params: { keyword: this.keyword } }
+    location.query = this.$route.query
+    this.$router.push(location)
+}
+```
+
+```js
+// TypeNav/index.vue 
+goSearch(event) {
+    // 编程式导航+事件委托
+    let element = event.target
+    console.log("要传递的element.dataset↓", element.dataset)
+    let { categoryname, category1id, category2id, category3id } = element.dataset
+
+    if (categoryname) {
+        let location = { name: 'search' }
+        let query = { categoryName: categoryname }
+
+        if (category1id) {
+            query.category1Id = category1id
+        } else if (category2id) {
+            query.category1Id = category2id
+        } else if (category3id) {
+            query.category3Id = category3id
+        }
+
+        // koko
+        location.query = query
+        location.params = this.$route.params
+
+        this.$router.push(location)
+    }
+}
+```
+
+这样一来，就实现了query和param两参共传。
 
 
 
+## mockjs模拟数据
+
+mock-模拟，前端用这个来生成一些随机数据，拦截AJAX请求啥的。
+
+### mockjs插件的使用
+
+1. 创建src/mock/
+
+2. 准备JSON数据
+
+3. 把mock数据需要的图片放置在public文件夹中，这个文件夹在打包的时候会把相应的资源原封不动打包到dist文件夹中
+
+4. 创建mockServe.js文件，开始mock虚拟数据
+
+5. 入口文件引入mockServe.js
+
+#### 实现Home页面ListContainer组件
+
+/mock/mockServe.js
+
+```js
+import Mock from 'mockjs';
+import banners from './banners.json';
+import floors from './floors.json';
+
+Mock.mock("/mock/banners", { code: 200, data: banners })
+Mock.mock("/mock/floors", { code: 200, data: floors })
+```
+
+/api/mockAjax.js
+
+```js
+import axios from "axios";
+
+const mockRequests = axios.create({
+    baseURL: "/mock",
+    timeout: 10000,
+})
+// 请求拦截器
+mockRequests.interceptors.request.use((config) => {
+    return config
+})
+// 响应拦截器
+mockRequests.interceptors.response.use((res) => {
+    return res
+}, (error) => {
+    return Promise.reject(new Error('ERROR:' + error))
+})
+
+export default mockRequests
+```
+
+/api/index.js
+
+```js
+import mockRequests from './mockAjax'
+export const reqGetBannerList = () => mockRequests({
+    url: '/banners',
+    method: 'get'
+})
+```
+
+/store/home/index.js
+
+```js
+const actions = {
+    async getBannerList() {
+        let result = await reqGetBannerList()
+        console.log("请求获取到的mock内容↓", result.data) // test
+    }
+}
+```
+
+/ListContainer/index.vue
+
+```js
+mounted() {
+    this.$store.dispatch('getBannerList')
+},
+computed: {
+    ...mapState({
+        bannerList: state => state.home.bannerList
+    })
+}
+```
 
 
 
-
-
-
+#### 实现Home页面Floor组件
 
 
 

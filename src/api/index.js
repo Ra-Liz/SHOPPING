@@ -1,7 +1,12 @@
 import requests from './request'
+import mockRequests from './mockAjax'
 
 export const reqCategoryList = () => requests({
-    // 去掉/api就不行，到底是为啥
     url: '/product/getBaseCategoryList',
+    method: 'get'
+})
+
+export const reqGetBannerList = () => mockRequests({
+    url: '/banners',
     method: 'get'
 })

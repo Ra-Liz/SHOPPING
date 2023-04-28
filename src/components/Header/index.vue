@@ -44,17 +44,19 @@
 export default {
     name: "RHeader",
     data() {
-      return {
-        keyword: ''
-      }
+        return {
+            keyword: ''
+        }
     },
 
     methods: {
-      goSearch () {
-        this.$router.push({name: "search", params: {keyword: this.keyword}, query: {k: this.keyword.toUpperCase()}})
-      }
+        goSearch() {
+            let location = { name: "search", params: { keyword: this.keyword } }
+            location.query = this.$route.query
+            this.$router.push(location)
+        }
     }
-  }
+}
 
 </script>
 
