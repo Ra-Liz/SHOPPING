@@ -6,8 +6,8 @@
                 <!--banner轮播-->
                 <div class="swiper-container" id="mySwiper">
                     <div class="swiper-wrapper">
-                        <div class="swiper-slide">
-                            <img src="./images/banner1.jpg" />
+                        <div class="swiper-slide" v-for="carousel in bannerList" :key="carousel.id">
+                            <img :src="carousel.imgUrl" />
                         </div>
                     </div>
                     <!-- 如果需要分页器 -->
@@ -103,6 +103,7 @@
 
 <script>
 import { mapState } from 'vuex';
+import Swiper from 'swiper';
 export default {
     name: 'RContainer',
     mounted() {
@@ -112,6 +113,26 @@ export default {
         ...mapState({
             bannerList: state => state.home.bannerList
         })
+    },
+    watch: {
+        bannerList: {
+            handler(nVal, oVal) {
+                this.$nextTick(() => {
+                    const mySwiper = new Swiper(document.querySelector('.swiper-container'), {
+                        loop: true,
+                        pagination: {
+                            el: '.swiper-pagination',
+                            clickable: true
+                        },
+                        navigation: {
+                            nextEl: '.swiper-button-next',
+                            prevEl: '.swiper-button-prev'
+                        }
+                    })
+                    console.log("Swiper实例创建完成", mySwiper, nVal, oVal) // ee完全是为了某种程度上符合eslint规范
+                })
+            }
+        }
     }
 }
 </script>

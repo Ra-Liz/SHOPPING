@@ -37,11 +37,23 @@ export default {
 ```js
 //routes.js
 {
-    path: '/search/:keyword?',
+    path: '/search/:keyword?', // 占位符，且可有可无
     component: Search,
     meta: {show: true},
-    name: "search"
+    name: "search"，
+    
+    // 布尔值写法
+    props:true,
+    // 对象写法,额外地给路由组件传递一些props
+    props:{a:1,b:2}，
+    // 函数写法:params参数 query参数都可以传递
+    props:($route)=>{
+        return{ keyword: $route.params.keyword, k: $route.query.k }
+    }
 },
+    
+//在search组件接的时候↓
+    props: ['keyword', 'a', 'b', 'k']
 ```
 
 ### 小结
@@ -71,7 +83,7 @@ export default {
 1. path不能与params一起使用，跳转不了↑
 2. 如果路由要求传params（已经占位），那么不传的话，路由跳转会有问题。那如何可传可不传呢？--占位后面加`?`
 3. params参数可以不传递，但如果传的是空字符串，如何解决？--params: {kw: ''||undefined}
-4. 路由组件能否传递props？--椰丝!见上方routes.js
+4. 路由组件能否传递props？--上方routes.js↑
 
 ## 编程式路由导航
 
@@ -94,8 +106,10 @@ vue-router引入了promise
 
    `this.$router.push({name: "search", params: {keyword: this.keyword}, query: {k: this.keyword.toUpperCase()}}, ()={}, ()=>{})`
 
-3. 重写push/replace函数
+3. 重写push/replace函数，兼容了旧的调用方式。
 
+   这里主要是做了一个判断：如果传入了res,rej函数，那么就调用原始的push/replace方法；反之就传入空函数作为回调。
+   
    ```js
    let originPush = VueRouter.prototype.push
    let originReplace = VueRouter.prototype.replace
@@ -140,27 +154,56 @@ vue-router引入了promise
 
 ```js
 import 组件 from '组件路径'
-Vue.component(组件.name, 组件名)
+Vue.component(组件的字符串名, 组件)
 ```
 
 #### 扩展-一次性全局注册多个组件
 
 ```js
-import 组件 from '...' // 引入多个组件
+import Vue from 'vue'
+import MyComponent1 from './MyComponent1.vue'
+import MyComponent2 from './MyComponent2.vue'
+import MyComponent3 from './MyComponent3.vue'
 
+const components = {
+  'my-component-1': MyComponent1,
+  'my-component-2': MyComponent2,
+  'my-component-3': MyComponent3
+}
+
+for (const name in components) {
+  Vue.component(name, components[name])
+}
 ```
 
 ## 拆分静态组件
 
 ### 小结
 
-个人认为分大拆、小拆、细拆
+#### 个人认为
+
+（仅仅仅仅是个人认为）分大拆、小拆、细拆
 
 大拆【结构、样式、图片资源】就是按几个分类明显的`<div></div>`去拆，分别做好这些组件
 
 小拆就是这几个组件里面有无可供复用的组件，提出来
 
 细拆就是更多的路由、计算啥的东西了
+
+#### chatGPT
+
+对于将一个大的静态页面拆分成多个 Vue 组件的过程，建议按照以下步骤进行：
+
+1. 将页面中的**结构和样式**抽象出来，封装为一个通用的组件。
+2. 将页面中可以复用的部分（如页头、页脚、导航栏等）提取出来，封装为一个**公共组件**，可在多个页面中复用。
+3. 将页面中各个部分抽象成**小组件**，分别实现各自的功能，并组合成一个完整的页面。
+4. 如果页面比较复杂，可以考虑使用 **Vue Router** 实现路由功能，将不同的页面分成多个组件，并通过路由实现页面间的跳转。
+5. 如果页面中需要获取数据，可以在组件中使用 Vue.js 提供的**生命周期钩子**函数，在组件创建前或组件更新时通过 Ajax **请求**获取数据，并将**数据**绑定到组件中。
+6. 最后，将各个组件进行组合，渲染出完整的页面。
+
+以上是一个大致的拆分思路，实际的实现方式可能会因具体情况而异。另外，建议在拆分组件的过程中，尽量保持组件的独立性和复用性，避免组件之间的耦合度过高。
+
+
 
 ## 用APIPOST测试接口
 
@@ -923,6 +966,10 @@ goSearch(event) {
 
 ## 合并参数
 
+在此之前，对于TypeNav请求次数优化问题，我们只需要将其放在app.vue跟文件中执行一次拿到数据即可
+
+
+
 讲真我不是很明白这到底是个什么业务，为什么分类和搜索的参数要合并在一起。
 
 它是这样表述的：search模块的路由传参只有name和params，TypeNav模块的路由传参只有name和query。当我已经输入关键词查找后，点击分类，路由应该保留我的params；当我点击分类后查找，路由应该保留我的query。因此，要在TypeNav和Search相关实现中进行路由传参（name, params, query）的合并。
@@ -988,7 +1035,13 @@ mock-模拟，前端用这个来生成一些随机数据，拦截AJAX请求啥�
 
 5. 入口文件引入mockServe.js
 
-#### 实现Home页面ListContainer组件
+具体使用请看下方两组件实现。
+
+
+
+## 实现Home页面ListContainer中banner组件
+
+### 获取和处理数据
 
 /mock/mockServe.js
 
@@ -1058,9 +1111,130 @@ computed: {
 }
 ```
 
+### 重要的轮播图实现！
+
+该轮播图组件使用了swiper5，以下记录了我的具体操作方法，不过还是想用JS写一遍
+
+#### 使用swiper5+watch+$nextTick实现轮播图（比较完美）
+
+1. 安装 `pnpm add --save swiper@5`
+2. 引入 在使用轮播图的地方引入Swiper，在main.js中一次性引入swiper样式
+3. 处理好数据，实现好遍历正确信息
+
+```js
+watch: {
+    bannerList: {
+        handler(nVal, oVal) {
+            this.$nextTick(() => {
+                const mySwiper = new Swiper(document.querySelector('.swiper-container'), {
+                    loop: true, // 循环控制
+                    pagination: { // 分液器
+                        el: '.swiper-pagination',
+                        clickable: true // 点击圆点跳转
+                    },
+                    navigation: { // 前后键
+                        nextEl: '.swiper-button-next',
+                        prevEl: '.swiper-button-prev'
+                    }
+                })
+            })
+        }
+    }
+}
+```
+
+使用$nextTick保证数据和结构已经有了，然后针对更新的数据进行回调，获取更新之后的DOM。
+
+#### 使用JS实现轮播图（:D）
+
+```html
+<div id="slider">
+  <div class="slider-container">
+    <div class="slider-item">Slide 1</div>
+    <div class="slider-item">Slide 2</div>
+    <div class="slider-item">Slide 3</div>
+    <div class="slider-item">Slide 4</div>
+  </div>
+</div>
+```
+
+```css
+#slider {
+  width: 100%;
+  overflow: hidden;
+}
+
+.slider-container {
+  display: flex;
+  transition: transform 0.5s ease;
+}
+
+.slider-item {
+  width: 100%;
+}
+```
+
+```js
+const slider = document.getElementById('slider');
+const sliderContainer = slider.querySelector('.slider-container');
+const sliderItems = slider.querySelectorAll('.slider-item');
+
+let currentIndex = 0;
+
+// 设置轮播图容器宽度
+sliderContainer.style.width = `${sliderItems.length * 100}%`;
+
+// 设置轮播图每一项宽度
+sliderItems.forEach((item) => {
+  item.style.width = `${100 / sliderItems.length}%`;
+});
+
+// 切换到指定索引的轮播图项
+function goToSlide(index) {
+  // 如果索引无效，则返回
+  if (index < 0 || index >= sliderItems.length) {
+    return;
+  }
+
+  // 根据索引计算偏移量，并设置容器的 transform 样式
+  const offset = -index * (100 / sliderItems.length);
+  sliderContainer.style.transform = `translateX(${offset}%)`;
+
+  // 更新当前索引
+  currentIndex = index;
+}
+
+// 切换到下一项轮播图
+function nextSlide() {
+  goToSlide(currentIndex + 1);
+}
+
+// 切换到上一项轮播图
+function prevSlide() {
+  goToSlide(currentIndex - 1);
+}
+
+// 自动切换轮播图
+setInterval(() => {
+  nextSlide();
+}, 3000);
+```
+
+## 实现Home页面Floor组件
 
 
-#### 实现Home页面Floor组件
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

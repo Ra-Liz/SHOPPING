@@ -25,10 +25,10 @@ const actions = {
 
 const mutations = {
     CATEGORYLIST(state, categoryList) {
-        state.categoryList = categoryList
+        state.categoryList = categoryList.data
     },
     GETBANNERLIST(state, bannerList) {
-        state.bannerList = bannerList
+        state.bannerList = bannerList.data
     }
 }
 

@@ -9,6 +9,8 @@ import router from './router'
 import store from './store'
 // mock数据
 import '@/mock/mockServe'
+// swiper5样式
+import 'swiper/css/swiper.css';
 
 Vue.config.productionTip = false
 

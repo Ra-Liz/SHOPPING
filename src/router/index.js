@@ -2,11 +2,11 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 import routes from './routes'
 
-// 声明使用插件
 Vue.use(VueRouter)
 
 let originPush = VueRouter.prototype.push
 let originReplace = VueRouter.prototype.replace
+
 VueRouter.prototype.push = function (location, resolve, reject) {
   if (resolve && reject) {
     originPush.call(this, location, resolve, reject)

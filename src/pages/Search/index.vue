@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1>ko re wa search vc</h1>
+    <h1>ko ko wa search vc</h1>
     <TypeNav />
   </div>
 </template>
