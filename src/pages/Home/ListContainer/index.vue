@@ -4,7 +4,7 @@
         <div class="sortList clearfix">
             <div class="center">
                 <!--banner轮播-->
-                <div class="swiper-container" id="mySwiper">
+                <div class="swiper-container" ref="mySwiper">
                     <div class="swiper-wrapper">
                         <div class="swiper-slide" v-for="carousel in bannerList" :key="carousel.id">
                             <img :src="carousel.imgUrl" />
@@ -116,9 +116,10 @@ export default {
     },
     watch: {
         bannerList: {
+            immediate: true,
             handler(nVal, oVal) {
                 this.$nextTick(() => {
-                    const mySwiper = new Swiper(document.querySelector('.swiper-container'), {
+                    const mySwiper = new Swiper(this.$refs.mySwiper, {
                         loop: true,
                         pagination: {
                             el: '.swiper-pagination',

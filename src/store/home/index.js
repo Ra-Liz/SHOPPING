@@ -1,9 +1,10 @@
 // home
-import { reqCategoryList, reqGetBannerList } from "@/api"
+import { reqCategoryList, reqGetBannerList, reqGetFloorList } from "@/api"
 
 const state = {
     categoryList: [],
     bannerList: [],
+    floorList: [],
 }
 
 const actions = {
@@ -16,9 +17,16 @@ const actions = {
     },
     async getBannerList({commit}) {
         let result = await reqGetBannerList()
-        console.log("请求获取到的mock内容↓", result.data)
+        console.log("请求获取到的mock-banner内容↓", result.data)
         if (result.status === 200) {
             commit("GETBANNERLIST", result.data)
+        }
+    },
+    async getFloorList({commit}) {
+        let result = await reqGetFloorList()
+        console.log("请求获取到的mock-floor内容↓", result.data)
+        if (result.status === 200) {
+            commit("GETFLOORLIST", result.data)
         }
     }
 }
@@ -29,6 +37,9 @@ const mutations = {
     },
     GETBANNERLIST(state, bannerList) {
         state.bannerList = bannerList.data
+    },
+    GETFLOORLIST(state, floorList) {
+        state.floorList = floorList.data
     }
 }
 

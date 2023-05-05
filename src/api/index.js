@@ -10,3 +10,8 @@ export const reqGetBannerList = () => mockRequests({
     url: '/banners',
     method: 'get'
 })
+
+export const reqGetFloorList = () => mockRequests({
+    url: '/floors',
+    method: 'get'
+})

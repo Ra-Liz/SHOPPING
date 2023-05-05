@@ -1126,7 +1126,8 @@ watch: {
     bannerList: {
         handler(nVal, oVal) {
             this.$nextTick(() => {
-                const mySwiper = new Swiper(document.querySelector('.swiper-container'), {
+                // 还是ref香呀↓
+                const mySwiper = new Swiper(this.$refs.mySwiper, {
                     loop: true, // 循环控制
                     pagination: { // 分液器
                         el: '.swiper-pagination',
@@ -1222,11 +1223,155 @@ setInterval(() => {
 
 ## 实现Home页面Floor组件
 
+通过以上的学习，大致总结出做前端工作的一些基本步骤↓
 
+>  搞静态 => 写api => 仓库三连环 => 组件捞数据 => 渲染展示
 
+### 接下来我们开始先写Floor的api
 
+api/index.js
 
+```js
+export const reqGetFloorList = () => mockRequests({
+    url: '/floors',
+    method: 'get'
+})
+```
 
+### 然后是三连环
+
+store/home/index.js
+
+```js
+// all I want to say is that: 数据格式完全取决于服务器返回了啥，所以不要瞎写，多输出看看嘛
+const state = {
+    ....
+    floorList: [],
+}
+const actions = {
+    ....
+    async getFloorList({commit}) {
+        let result = await reqGetFloorList()
+        console.log("请求获取到的mock-floor内容↓", result.data)
+        if (result.status === 200) {
+            commit("GETFLOORLIST", result.data)
+        }
+    }
+}
+
+const mutations = {
+    ....
+    GETFLOORLIST(state, floorList) {
+        state.floorList = floorList.data
+    }
+}
+```
+
+### 接着是组件捞数据咯！
+
+#### 先找个地方跑actions
+
+Home/RHome.vue
+
+```vue
+<template>
+    ....
+	<Floor v-for="floor in floorList" :key="floor.id"/>
+</template>
+
+<script>
+    ....
+    mounted() {
+        this.$store.dispatch("getFloorList")
+        console.log("home mounted获取floor数据")
+    },
+    computed: {
+        ...mapState({
+            floorList: state => state.home.floorList
+        })
+    }
+</script>
+```
+
+#### 再数据传递
+
+##### 组件间通信方式
+
+1. props：用于父子组件间通信
+2. 自定义事件：@on @emit实现子组件给父组件通信
+3. 全局事件总线：$bus 全
+4. pubsub-js：vue当中几乎不能用 全
+5. 插槽：全
+6. Vuex：全
+
+###### 这里用到了父组件向子组件传递数据，我们使用props↓
+
+父组件RHome.vue
+
+```js
+<Floor v-for="floor in floorList" :key="floor.id" :list="floor"/>
+```
+
+子组件Floor.vue
+
+```js
+props: ['list'],
+```
+
+#### 最后展示
+
+这里主要就是拿着数据替换静态位置
+
+##### 动态展示Floor轮播图
+
+也是选择了在watch中new一个Swiper实例，并在swiper-container内进行合理v-for。（当然这里的数据在父组件中就已经挂好了，可以在mounted中写实例，莫得问题。但是咱为了方便接下来对这个共用轮播组件优化，所以在watch中）
+
+```vue
+<template>
+	...
+    <div class="floorBanner">
+        <div class="swiper-container" ref="floor1Swiper">
+            <div class="swiper-wrapper">
+                <div class="swiper-slide" v-for="carousel in list.carouselList" :key="carousel.id">
+                    <img :src="carousel.imgUrl">
+                </div>
+            </div>
+            <!-- 如果需要分页器 -->
+            <div class="swiper-pagination"></div>
+
+            <!-- 如果需要导航按钮 -->
+            <div class="swiper-button-prev"></div>
+            <div class="swiper-button-next"></div>
+        </div>
+    </div>
+</template>
+<script>
+	....
+    watch: {
+        list: {
+            immediate: true, // 上来就执行一遍捏
+            handler() {
+                this.$nextTick(() => {
+                    const mySwiper = new Swiper(this.$refs.floor1Swiper, {
+                        loop: true,
+                        pagination: {
+                            el: '.swiper-pagination',
+                            clickable: true
+                        },
+                        navigation: {
+                            nextEl: '.swiper-button-next',
+                            prevEl: '.swiper-button-prev'
+                        }
+                    })
+                    console.log("Swiper实例创建完成", mySwiper) // ee完全是为了某种程度上符合eslint规范
+                })
+            }
+        }
+    }
+</script>
+```
+
+### 共用组件Carousel-轮播图实现
 
 
 

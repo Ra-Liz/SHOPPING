@@ -21,7 +21,7 @@ export default {
   mounted() {
     // 派发一个action来获取商品分类三级列表的数据
     this.$store.dispatch('categoryList')
-    console.log("三级列表数据↓", this.$store.state)
+    console.log("app mounted获取三级列表state数据")
   },
 }
 </script>
