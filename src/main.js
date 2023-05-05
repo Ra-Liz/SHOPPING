@@ -1,8 +1,11 @@
 import Vue from 'vue'
 import App from './App.vue'
-// 三级联动
+// 三级
 import TypeNav from '@/components/TypeNav'
+// 轮播
+import Carousel from '@/components/Carousel'
 Vue.component(TypeNav.name, TypeNav)
+Vue.component(Carousel.name, Carousel)
 // 路由
 import router from './router'
 // 仓库

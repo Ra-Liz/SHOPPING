@@ -2,6 +2,14 @@
 
 
 
+## 文档地址
+
+俺的项目功能实现经验全都写好放在这里了！请看！
+
+https://ra-liz.github.io/SHOPPING/#/
+
+
+
 ## 参考建议
 
 一定要手敲，纯手敲，从零开始搭！这样才能熟悉一些常见的业务逻辑，而且对一些巧妙的功能实现真正手操。
@@ -23,14 +31,6 @@
 6. 提一下pr
 
 commit mesage规范详见：https://www.conventionalcommits.org/zh-hans/v1.0.0/
-
-
-
-## 文档地址
-
-俺的项目功能实现经验全都写好放在这里了！请看！
-
-https://ra-liz.github.io/SHOPPING/#/
 
 
 

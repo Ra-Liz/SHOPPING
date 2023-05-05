@@ -1373,7 +1373,72 @@ props: ['list'],
 
 ### 共用组件Carousel-轮播图实现
 
+#### 实现
 
+正如标题所说，亦如上两个实现所见，其轮播功能大同小异（结构同，样式同，方式同）
+
+那么我们完全可以将这个轮播功能拆出来做一个共用全局组件（往后还有很多地方要用到轮播组件）
+
+Carousel/index.vue
+
+```vue
+<template>
+    <div class="swiper-container" ref="floor1Swiper">
+        <div class="swiper-wrapper">
+            <div class="swiper-slide" v-for="carousel in list" :key="carousel.id">
+                <img :src="carousel.imgUrl">
+            </div>
+        </div>
+        <div class="swiper-pagination"></div>
+        <div class="swiper-button-prev"></div>
+        <div class="swiper-button-next"></div>
+    </div>
+</template>
+
+<script>
+import Swiper from 'swiper'
+export default {
+    name: 'RCarousel',
+    props: ['list'],
+    watch: {
+        list: {
+            immediate: true, // 上来就执行一遍捏
+            handler() {
+                this.$nextTick(() => {
+                    const mySwiper = new Swiper(this.$refs.floor1Swiper, {
+                        loop: true,
+                        pagination: {
+                            el: '.swiper-pagination',
+                            clickable: true
+                        },
+                        navigation: {
+                            nextEl: '.swiper-button-next',
+                            prevEl: '.swiper-button-prev'
+                        }
+                    })
+                })
+            }
+        }
+    }
+}
+</script>
+```
+
+使用该组件的父组件们
+
+```html
+<Carousel :list="把处理好的数据集传进去" />
+```
+
+简简单单~
+
+#### Vue组件化开发思想
+
+那让我们来谈一谈这种思想吧！
+
+Vue.js组件化开发思想是**将复杂的应用程序拆分为多个小的、可复用的组件，每个组件只关注自身的功能实现**，然后将这些组件组合在一起形成完整的应用程序。这种开发方式可以提高应用程序的可维护性和可复用性，同时也可以提高开发效率，因为不同的组件可以并行开发和测试。
+
+在这个项目中，我们将轮播图功能单独拿出来成一个组件，可以将轮播图的逻辑和UI独立出来，避免与其他功能混杂在一起，使得组件的结构更加清晰，易于维护。同时，由于组件的可复用性很高，我们可以在其他地方使用同样的轮播图组件，避免了代码的重复编写，提高了开发效率。
 
 
 
