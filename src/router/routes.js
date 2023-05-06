@@ -1,5 +1,5 @@
 import Home from '@/pages/Home/RHome.vue'
-import Search from '@/pages/Search'
+import Search from '@/pages/Search/RSearch.vue'
 import Register from '@/pages/Register'
 import Login from '@/pages/Login'
 
@@ -18,7 +18,7 @@ export default [
     path: '/search/:keyword?',
     component: Search,
     meta: {show: true},
-    name: "search"
+    name: "search",
   },
 
   {

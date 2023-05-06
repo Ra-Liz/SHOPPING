@@ -1371,9 +1371,9 @@ props: ['list'],
 </script>
 ```
 
-### 共用组件Carousel-轮播图实现
+## 共用组件Carousel-轮播图实现
 
-#### 实现
+### 实现
 
 正如标题所说，亦如上两个实现所见，其轮播功能大同小异（结构同，样式同，方式同）
 
@@ -1432,13 +1432,129 @@ export default {
 
 简简单单~
 
-#### Vue组件化开发思想
+### Vue组件化开发思想
 
 那让我们来谈一谈这种思想吧！
 
 Vue.js组件化开发思想是**将复杂的应用程序拆分为多个小的、可复用的组件，每个组件只关注自身的功能实现**，然后将这些组件组合在一起形成完整的应用程序。这种开发方式可以提高应用程序的可维护性和可复用性，同时也可以提高开发效率，因为不同的组件可以并行开发和测试。
 
 在这个项目中，我们将轮播图功能单独拿出来成一个组件，可以将轮播图的逻辑和UI独立出来，避免与其他功能混杂在一起，使得组件的结构更加清晰，易于维护。同时，由于组件的可复用性很高，我们可以在其他地方使用同样的轮播图组件，避免了代码的重复编写，提高了开发效率。
+
+## Search模块搭建
+
+我们再顺一遍功能模块开发流程：写静态 => 拆组件 => 写api => 写状态管理 => 捞取数据 => 动态渲染
+
+### 此处省略静态和拆分
+
+这里api请求较上几个特殊，因为用到的method是`POST`，该方法需要传参，且参数至少是个空对象，否则获取失败。
+
+```js
+const actions = {
+    async getSearchList({commit}, value) {
+        let result = await reqGetSearchInfo(value)
+        console.log("请求获取到的search-info内容↓", result.data)
+        if (result.status === 200) {
+            commit('GETSEARCHLIST', result.data)
+        }
+    }
+}
+const mutations = {
+    GETSEARCHLIST(searchInfo) {
+        state.searchInfo = searchInfo.data
+    }
+}
+```
+
+### Vuex装填管理中，我们将用到船新的`getters`，这个方法主要是为了简化仓库中的数据。
+
+```js
+const getters = {
+    attrsList(state) {
+        return state.searchList.attrsList
+    },
+    goodsList(state) {
+        return state.searchList.goodsList
+    },
+    trademarkList(state) {
+        return state.searchList.trademarkList
+    }
+}
+```
+
+### 捞取数据-Getters
+
+```js
+computed: {
+	...mapGetters(['goodsList', ....])
+}
+```
+
+### 展示
+
+```xml
+v-for 搭配 差值/绑定 使用
+```
+
+### 根据不同的参数获取数据并展示-beforeMount
+
+这就比较重要了！因为很多情况下，我们不能post时只传一个空对象，这样获取的是全部数据。我们需要传入响应的参数来筛出所需数据。
+
+我们首先要规范一下要传进去的对象参数`searchParams`，然后要在dispatch之前将Header/TypeNav模块传入的params/query覆盖进searchParams中。
+
+```vue
+<template>....</template>
+<script>
+....
+export default {
+  ....
+  data() {
+    return {
+      searchParams: { 
+          // 理论上先放这里面没错，但是我这里如果先放进去这些空值，会导致数据结构不一致，拉不到数据QAQ，先让它就是个空对象吧
+          /*category1Id: '',
+          category2Id: '',
+          category3Id: '',
+          categoryName: '',
+          keyword: '', 
+          order: '',
+          pageNo: '',
+          pageSize: '',
+          props: [],
+          trademark: ''*/
+      },
+    }
+  },
+  methods: {
+    getData() {
+      this.$store.dispatch('getSearchList', this.searchParams)
+    }
+  },
+  computed: {
+    ...mapGetters(['goodsList', 'trademarkList'])
+  },
+  beforeMount() {
+    Object.assign(this.searchParams, this.$route.query, this.$route.params)
+  },
+  mounted() {
+    this.getData()
+  },
+}
+</script>
+```
+
+
+
+
+
+
+
+
+
+
+
+（打算做的组件：跑马灯、面包屑）
+
+
 
 
 
