@@ -27,5 +27,11 @@ export default {
 </script>
 
 <style>
-
+  /* body {
+    filter: grayscale(100%);
+  } */
+  ::selection {
+    color: white;
+    background-color: brown;
+  }
 </style>
