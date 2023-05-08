@@ -151,6 +151,15 @@ export default {
   computed: {
     ...mapGetters(['goodsList', 'trademarkList'])
   },
+  watch: {
+    $route() {
+      Object.assign(this.searchParams, this.$route.query, this.$route.params)
+      this.getData()
+      this.searchParams.category1Id = ''
+      this.searchParams.category2Id = ''
+      this.searchParams.category3Id = ''
+    }
+  },
   beforeMount() {
     Object.assign(this.searchParams, this.$route.query, this.$route.params)
   },

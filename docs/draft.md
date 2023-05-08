@@ -1440,7 +1440,7 @@ Vue.js组件化开发思想是**将复杂的应用程序拆分为多个小的、
 
 在这个项目中，我们将轮播图功能单独拿出来成一个组件，可以将轮播图的逻辑和UI独立出来，避免与其他功能混杂在一起，使得组件的结构更加清晰，易于维护。同时，由于组件的可复用性很高，我们可以在其他地方使用同样的轮播图组件，避免了代码的重复编写，提高了开发效率。
 
-## Search模块搭建
+## Search模块搭建-内容很多
 
 我们再顺一遍功能模块开发流程：写静态 => 拆组件 => 写api => 写状态管理 => 捞取数据 => 动态渲染
 
@@ -1511,7 +1511,7 @@ export default {
     return {
       searchParams: { 
           // 理论上先放这里面没错，但是我这里如果先放进去这些空值，会导致数据结构不一致，拉不到数据QAQ，先让它就是个空对象吧
-          /*category1Id: '',
+          /* category1Id: '',
           category2Id: '',
           category3Id: '',
           categoryName: '',
@@ -1520,7 +1520,7 @@ export default {
           pageNo: '',
           pageSize: '',
           props: [],
-          trademark: ''*/
+          trademark: '' */
       },
     }
   },
@@ -1542,9 +1542,25 @@ export default {
 </script>
 ```
 
+子组件的数据展示类似，略。
 
+### 监视路由，灵活获取数据
 
+```js
+watch: {
+    $route() {
+      Object.assign(this.searchParams, this.$route.query, this.$route.params)
+      this.getData()
+      this.searchParams.category1Id = ''
+      this.searchParams.category2Id = ''
+      this.searchParams.category3Id = ''
+    }
+},
+```
 
+实现点击分类时动态捞所需数据。
+
+## Search页面面包屑分类管理
 
 
 
