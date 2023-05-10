@@ -1560,7 +1560,262 @@ watch: {
 
 实现点击分类时动态捞所需数据。
 
-## Search页面面包屑分类管理
+## Search页面面包屑
+
+### 思想准备(doge)
+
+首先我们应当清除知晓面包屑显示哪些数据，凭此做一些分类处理工作↓
+
+- query中的categoryName
+- params中的keyword
+- 品牌
+
+### 开始实践
+
+#### categoryName分类管理
+
+当点击TypeNav三级分类中的内容存入了`$route.query`中，根据`searchParams`参数向服务器发请求捞取相关数据。
+
+```vue
+<li v-if="searchParams.categoryName">{{ searchParams.categoryName }}<i>×</i></li>
+```
+
+我们能够注意到，每个li中都有一个小叉'x'，它的作用是点击时，对应面包屑删除。
+
+删除不仅仅是要这个面包屑在页面上不显示！还有一系列必要操作需要绑定在这个点击删除的动作中。
+
+- `searchParams`中`categoryName`变为`undefined`，与之相匹配的`category1/2/3Id`也需要对应变为`undefined`
+- 基于先前监视路由来重新获取数据`getData()`操作，且`categoryName`由路由获取传递，我们不妨`this.$router.push()`修改传参
+- 检测到路由数据改变后，成功拿取到新`searchParams`作为post参数去捞取到对应分类的数据
+- 注意：路由传参不应影响路由其他参数(如存放关键词的params)，所以要注意保留
+
+```vue
+<template>
+....<li v-if="searchParams.categoryName">{{ searchParams.categoryName }}<i @click="removeCategoryName">×</i></li>....
+</template>
+<script>
+....
+methods: {
+    getData() {
+      this.$store.dispatch('getSearchList', this.searchParams)
+    },
+    removeCategoryName() {
+      this.searchParams.categoryName = undefined // 分类名置undefined
+      this.searchParams.category1Id = undefined // 对应Id置为undefined
+      this.searchParams.category2Id = undefined
+      this.searchParams.category3Id = undefined
+      this.$router.push({ name: 'search', params: this.$route.params })
+    },
+},
+watch: {
+    $route() {
+      Object.assign(this.searchParams, this.$route.query, this.$route.params) // 更新searchParams
+      this.getData() // 获取Vuex库中数据
+      this.searchParams.category1Id = undefined // 防止出现多于一个的有值分类
+      this.searchParams.category2Id = undefined
+      this.searchParams.category3Id = undefined
+    }
+},    
+</script>
+```
+
+#### keyword关键字处理
+
+Header页面中输入的关键字，存入`$route.params`中，根据`searchParams`参数向服务器捞取相关数据。
+
+```vue
+<li class="with-x" v-if="searchParams.keyword">{{ searchParams.keyword }}<i @click="...">×</i></li>
+```
+
+同理，小叉也绑定了一系列操作，而且有一个操作需要进行兄弟组件的参数传递。
+
+- `searchParams`中`keyword`变为`undefined`
+- 绑`$bus.$emit`事件总线，在Header页面中开启`$bus.$on`，使得清空搜索栏内容
+- `this.$router.push()`修改传参
+- 监听到路由变化，获取新`searchName`，调用`getData()`，重新捞参数
+
+```vue
+<template>
+....<i @click="removeKeyword">×</i>....
+</template>
+<script>
+....
+methods: {
+    ....
+    removeKeyword() {
+      alert("delete!!!keyword")
+      this.searchParams.keyword = undefined
+      this.$bus.$emit('clear')
+      this.$router.push({ name: 'search', query: this.$route.query })
+    }
+},
+watch: {....},    
+</script>
+
+Header/index.vue
+this.$bus.$on('clear', () => {
+	this.keyword = ''	
+})
+```
+
+##### 回顾全局事件总线
+
+- 入口文件中使用`$bus`	beforeCreate
+
+  ```js
+  beforeCreate() {
+      Vue.prototype.$bus = this
+  },
+  ```
+
+- 发组件`$bus.$emit('名')`	
+
+- 收组件`$bus.$on('名', () => {回调})`	mounted
+
+  ```js
+  mounted() {
+      this.$bus.$on('clear', () => {
+          this.keyword = ''
+      })
+  },
+  ```
+
+#### trademark品牌信息处理
+
+点击品牌，`serachParams`中`trademark`置为对应值（当然trademark要从子组件中获取到），进行请求数据渲染。
+
+```vue
+<li v-if="searchParams.trademark">{{ searchParams.trademark.split(':')[1] }}<i>×</i></li>
+```
+
+这里对于面包屑的操作主要分为两大部分
+
+- 获取品牌进行捞取展示
+  - 子组件中每个`trademark`绑定点击事件，点击后传入相应`trademark`对象`{id, name}`
+  - 父组件通过自定义事件获取到数据，将`trademark`添加到`searchParams`中，重发`getData()`捞取数据
+  - 渲染
+- 删除重新捞取
+  - 点击小叉，`searchParams`中`trademark`置为`undefined`，重发`getData()`捞取数据
+  - 渲染
+
+SearchSelector.vue
+
+```vue
+<template>
+    ....
+    <li v-for="trademark in trademarkList" :key="trademark.tmId" @click="tradeMarkHandler(trademark)">{{ trademark.tmName }}</li>
+</template>
+<script>
+....
+methods: {
+    tradeMarkHandler(trademark) {
+      // 使用自定义事件
+      this.$emit('trademarkInfo', trademark)
+    }
+},
+</script>
+```
+
+RSearch.vue
+
+```vue
+<template>
+	<li class="with-x" v-if="searchParams.trademark">{{ searchParams.trademark.split(':')[1] }}<i @click="removeTradeMark">×</i></li>
+
+    <SearchSelector @trademarkInfo="trademarkInfo" />
+</template>
+<script>
+	methods: {
+        trademarkInfo(trademark) {
+          console.log("父组件获取到了", trademark)
+          this.searchParams.trademark = `${trademark.tmId}:${trademark.tmName}`
+          this.getData()
+        },
+        removeTradeMark() {
+          alert("delete!!!trademark")
+          this.searchParams.trademark = undefined
+          this.getData()
+        },
+    }
+</script>
+```
+
+### 平台售卖属性操作
+
+点击平台售卖属性`attrValue`(在子组件)，`searchParams`(在父组件)中添加响应`props[]`，进行请求数据渲染。
+
+```vue
+<li class="with-x" v-for="(prop, index) in searchParams.props" :key="index">{{ prop.split(':')[1] }}<i @click="removeAttr(index)">×</i></li>
+```
+
+依然是分为两部分，一部分是通过自定义事件获取子组件点击的信息，处理传递数据重新捞取数据，另一部分是点击删除后相关操作。
+
+- 获取信息
+  - 子组件中绑定`click`事件，绑定回调中开启父组件自定义事件，并传入相关参数
+  - 父组件中将自定义事件与子组件引用模块绑定，回调中对数据进行去重和格式化
+  - `getData()`
+- 删除属性面包屑
+  - 点击删除，将`props`中对应的成员splice掉（也就是说绑定删除点击事件的时候要传入一个index，方便定位要删除的数据）
+  - 重新`getData()`
+
+SearchSelector.vue
+
+```vue
+<template>
+	....v-for="attr in attrsList"
+  <li v-for="(attrvalue, index) in attr.attrValueList" :key="index" @click="attrHandker(attr, attrvalue)">
+    <a>{{ attrvalue }}</a>
+  </li>
+</template>
+<script>
+methods: {
+    // 属性值
+    attrHandker(attr, attrvalue) {
+      this.$emit('attrInfo', attr, attrvalue)
+    }
+},
+</script>
+```
+
+RSearch.vue
+
+```vue
+<template>
+<li class="with-x" v-for="(prop, index) in searchParams.props" :key="index">{{ prop.split(':')[1] }}<i @click="removeAttr(index)">×</i></li>
+....
+<SearchSelector @trademarkInfo="trademarkInfo" @attrInfo="attrInfo" />
+</template>
+<script>
+    methods: {
+        // 获取属性
+        attrInfo(attr, attrvalue) {
+          console.log("父组件获取到了", attr, attrvalue)
+          let item = `${attr.attrId}:${attrvalue}:${attr.atteName}`
+          // 去重
+          if (this.searchParams.props.includes(item)) { return; }
+          this.searchParams.props.push(item)
+          console.log(this.searchParams.props)
+          this.getData()
+        },
+        // 删除属性
+        removeAttr(index) {
+          alert("delete!!!attr")
+          this.searchParams.props.splice(index, 1)
+          this.getData()
+        }
+    }
+</script>
+```
+
+
+
+
+
+
+
+
+
+
 
 
 

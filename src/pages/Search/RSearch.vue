@@ -11,12 +11,19 @@
             </li>
           </ul>
           <ul class="fl sui-tag">
-            <li class="with-x" v-for="tm in trademarkList" :key="tm.tmId">{{ tm.tmName }}<i>×</i></li>
+            <!-- 分类 -->
+            <li class="with-x" v-if="searchParams.categoryName">{{ searchParams.categoryName }}<i @click="removeCategoryName">×</i></li>
+            <!-- 关键字 -->
+            <li class="with-x" v-if="searchParams.keyword">{{ searchParams.keyword }}<i @click="removeKeyword">×</i></li>
+            <!-- 品牌名 -->
+            <li class="with-x" v-if="searchParams.trademark">{{ searchParams.trademark.split(':')[1] }}<i @click="removeTradeMark">×</i></li>
+            <!-- 平台售卖属性 -->
+            <li class="with-x" v-for="(prop, index) in searchParams.props" :key="index">{{ prop.split(':')[1] }}<i @click="removeAttr(index)">×</i></li>
           </ul>
         </div>
 
         <!--selector-->
-        <SearchSelector />
+        <SearchSelector @trademarkInfo="trademarkInfo" @attrInfo="attrInfo" />
 
         <!--details-->
         <div class="details clearfix">
@@ -140,24 +147,68 @@ export default {
   },
   data() {
     return {
-      searchParams: {},
+      searchParams: { props: [] },
     }
   },
   methods: {
     getData() {
       this.$store.dispatch('getSearchList', this.searchParams)
+    },
+    // 删除categoryName面包屑
+    removeCategoryName() {
+      alert("delete!!!categoryname")
+      this.searchParams.categoryName = undefined
+      this.searchParams.category1Id = undefined
+      this.searchParams.category2Id = undefined
+      this.searchParams.category3Id = undefined
+      this.$router.push({ name: 'search', params: this.$route.params })
+    },
+    // 删除keyword面包屑
+    removeKeyword() {
+      alert("delete!!!keyword")
+      this.searchParams.keyword = undefined
+      this.$bus.$emit('clear')
+      this.$router.push({ name: 'search', query: this.$route.query })
+    },
+    // 自定义事件回调
+    trademarkInfo(trademark) {
+      console.log("父组件获取到了", trademark)
+      this.searchParams.trademark = `${trademark.tmId}:${trademark.tmName}`
+      this.getData()
+    },
+    // 删除品牌面包屑
+    removeTradeMark() {
+      alert("delete!!!trademark")
+      this.searchParams.trademark = undefined
+      this.getData()
+    },
+    // 获取属性
+    attrInfo(attr, attrvalue) {
+      console.log("父组件获取到了", attr, attrvalue)
+      let item = `${attr.attrId}:${attrvalue}:${attr.atteName}`
+      // 去重
+      if (this.searchParams.props.includes(item)) { return; }
+      this.searchParams.props.push(item)
+      console.log(this.searchParams.props)
+      this.getData()
+    },
+    // 删除属性
+    removeAttr(index) {
+      alert("delete!!!attr")
+      this.searchParams.props.splice(index, 1)
+      this.getData()
     }
   },
   computed: {
-    ...mapGetters(['goodsList', 'trademarkList'])
+    ...mapGetters(['goodsList'])
   },
   watch: {
     $route() {
       Object.assign(this.searchParams, this.$route.query, this.$route.params)
       this.getData()
-      this.searchParams.category1Id = ''
-      this.searchParams.category2Id = ''
-      this.searchParams.category3Id = ''
+      this.searchParams.category1Id = undefined
+      this.searchParams.category2Id = undefined
+      this.searchParams.category3Id = undefined
     }
   },
   beforeMount() {

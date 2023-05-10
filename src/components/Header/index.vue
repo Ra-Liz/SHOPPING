@@ -48,14 +48,18 @@ export default {
             keyword: ''
         }
     },
-
     methods: {
         goSearch() {
             let location = { name: "search", params: { keyword: this.keyword } }
             location.query = this.$route.query
             this.$router.push(location)
         }
-    }
+    },
+    mounted() {
+        this.$bus.$on('clear', () => {
+            this.keyword = ''
+        })
+    },
 }
 
 </script>

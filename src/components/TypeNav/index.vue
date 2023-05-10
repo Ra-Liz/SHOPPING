@@ -85,7 +85,7 @@ export default {
         goSearch(event) {
             // 编程式导航+事件委托
             let element = event.target
-            console.log("要传递的element.dataset↓", element.dataset)
+            console.log("编程式导航：要传递的element.dataset↓", element.dataset)
             let { categoryname, category1id, category2id, category3id } = element.dataset
             
             if (categoryname) {
