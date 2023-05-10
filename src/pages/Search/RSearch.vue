@@ -12,13 +12,16 @@
           </ul>
           <ul class="fl sui-tag">
             <!-- 分类 -->
-            <li class="with-x" v-if="searchParams.categoryName">{{ searchParams.categoryName }}<i @click="removeCategoryName">×</i></li>
+            <li class="with-x" v-if="searchParams.categoryName">{{ searchParams.categoryName }}<i
+                @click="removeCategoryName">×</i></li>
             <!-- 关键字 -->
             <li class="with-x" v-if="searchParams.keyword">{{ searchParams.keyword }}<i @click="removeKeyword">×</i></li>
             <!-- 品牌名 -->
-            <li class="with-x" v-if="searchParams.trademark">{{ searchParams.trademark.split(':')[1] }}<i @click="removeTradeMark">×</i></li>
+            <li class="with-x" v-if="searchParams.trademark">{{ searchParams.trademark.split(':')[1] }}<i
+                @click="removeTradeMark">×</i></li>
             <!-- 平台售卖属性 -->
-            <li class="with-x" v-for="(prop, index) in searchParams.props" :key="index">{{ prop.split(':')[1] }}<i @click="removeAttr(index)">×</i></li>
+            <li class="with-x" v-for="(prop, index) in searchParams.props" :key="index">{{ prop.split(':')[1] }}<i
+                @click="removeAttr(index)">×</i></li>
           </ul>
         </div>
 
@@ -30,23 +33,12 @@
           <div class="sui-navbar">
             <div class="navbar-inner filter">
               <ul class="sui-nav">
-                <li class="active">
-                  <a href="#">综合</a>
+                <!-- class="active" -->
+                <li :class="{ active: CompreSort }" @click="changeOrder(1)">
+                  <a>综合<span v-show="CompreSort">&nbsp;{{ Order }}</span></a>
                 </li>
-                <li>
-                  <a href="#">销量</a>
-                </li>
-                <li>
-                  <a href="#">新品</a>
-                </li>
-                <li>
-                  <a href="#">评价</a>
-                </li>
-                <li>
-                  <a href="#">价格⬆</a>
-                </li>
-                <li>
-                  <a href="#">价格⬇</a>
+                <li :class="{ active: PriceSort }" @click="changeOrder(2)">
+                  <a>价格<span v-show="PriceSort">&nbsp;{{ Order }}</span></a>
                 </li>
               </ul>
             </div>
@@ -147,7 +139,7 @@ export default {
   },
   data() {
     return {
-      searchParams: { props: [] },
+      searchParams: { props: [], order: '1:desc' },
     }
   },
   methods: {
@@ -197,10 +189,36 @@ export default {
       alert("delete!!!attr")
       this.searchParams.props.splice(index, 1)
       this.getData()
-    }
+    },
+    // 升序或降序
+    changeOrder(flag){
+      let order = this.searchParams.order
+      // order = num:sort
+      let num = order.split(':')[0]
+      if (num != flag) {
+        this.searchParams.order = `${flag}:desc`
+      } else {
+        let sort = order.split(':')[1]
+        this.searchParams.order = `${flag}:${sort === 'desc'? 'asc' : 'desc'}`
+      }
+
+      this.getData()
+    },
   },
   computed: {
-    ...mapGetters(['goodsList'])
+    ...mapGetters(['goodsList']),
+    // 是否按照价格排序
+    PriceSort() { 
+      return this.searchParams.order.includes('2')
+    },
+    // 是否按照综合排序
+    CompreSort() { 
+      return this.searchParams.order.includes('1')
+    },
+    // 是否升序
+    Order() { 
+      return this.searchParams.order.includes('desc') ? '↓' : '↑'
+    },
   },
   watch: {
     $route() {
@@ -551,5 +569,4 @@ export default {
       }
     }
   }
-}
-</style>
+}</style>

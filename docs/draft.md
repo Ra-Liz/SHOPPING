@@ -1740,7 +1740,7 @@ RSearch.vue
 </script>
 ```
 
-### 平台售卖属性操作
+#### 平台售卖属性操作
 
 点击平台售卖属性`attrValue`(在子组件)，`searchParams`(在父组件)中添加响应`props[]`，进行请求数据渲染。
 
@@ -1809,13 +1809,66 @@ RSearch.vue
 
 
 
+## 排序操作
 
+对商品信息进行排序展示，排序方式有两种（综合/价格），顺序有两种（升序/降序）。
 
+### 明确逻辑
 
+- 综合或排序仅有一个被选中，选中后显示升序`↑`或降序`↓`，两种排序方式都默认为降序排列
+- 多次点击其中一个排序方式，顺序会在升降中切换
 
+### 理顺思路
 
+- 通过绑定class类`{active: //Sort}`如果`searchParams.order`中数字为1，`CompreSort == true`，数字为2，`PriceSort == true`，从而实现综合/价格排序的切换
+-  排序方式名中插入升/降序计算属性`Order`。点击同一个方式名时，升降序切换；点击不同方式名时，默认降序
+  - 使用模板字符串+条件表达式，进行切换
+  - 使用if+flag，判断点击是否同一个方式名并进行相应处理
+- `getData()`
 
+### 代码实现
 
+```vue
+<template>
+<ul class="sui-nav">
+    <!-- class="active" -->
+    <li :class="{ active: CompreSort }" @click="changeOrder(1)">
+      <a>综合<span v-show="CompreSort">&nbsp;{{ Order }}</span></a>
+    </li>
+    <li :class="{ active: PriceSort }" @click="changeOrder(2)">
+      <a>价格<span v-show="PriceSort">&nbsp;{{ Order }}</span></a>
+    </li>
+</ul>
+</template>
+<script>
+	methods: {
+        changeOrder(flag) {
+            let order = this.searchParams.order
+            let num = order.split(':')[0]
+            let sort = order.split(':')[1]
+            if (num != flag) {
+                this.searchParams.order = `${flag}:desc`
+            } else {
+                this.searchParams.order = `${num}:${sort==='desc'?'asc':'desc'}`
+            }
+            this.getData()
+        }
+    },
+    computed: {
+        CompreSort() {
+            return this.searchParams.order.includes('1')
+        },
+        PriceSort() {
+            return this.searchParams.order.includes('2')
+        },
+        Order() {
+            return this.searchParams.order.includes('desc') ? '↓' : '↑'
+        }
+    }
+</script>
+```
+
+### 分页器静态组件	
 
 
 

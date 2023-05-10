@@ -27,9 +27,9 @@ export default {
 </script>
 
 <style>
-  /* body {
+  body {
     filter: grayscale(100%);
-  } */
+  }
   ::selection {
     color: white;
     background-color: brown;
