@@ -28,7 +28,7 @@ export default {
 
 <style>
   body {
-    filter: grayscale(100%);
+    /* filter: grayscale(100%); */
   }
   ::selection {
     color: white;
