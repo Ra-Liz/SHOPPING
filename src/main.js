@@ -4,8 +4,11 @@ import App from './App.vue'
 import TypeNav from '@/components/TypeNav'
 // 轮播
 import Carousel from '@/components/Carousel'
+// 分页器
+import Pagination from '@/components/Pagination'
 Vue.component(TypeNav.name, TypeNav)
 Vue.component(Carousel.name, Carousel)
+Vue.component(Pagination.name, Pagination)
 // 路由
 import router from './router'
 // 仓库

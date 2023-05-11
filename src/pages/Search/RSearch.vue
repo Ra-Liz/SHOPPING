@@ -70,59 +70,10 @@
                   </div>
                 </div>
               </li>
-              <div class="list-wrap">
-                <div class="p-img">
-                  <img src="./images/mobile04.png" />
-                </div>
-                <div class="price">
-                  <strong>
-                    <em>¥</em>
-                    <i>6088.00</i>
-                  </strong>
-                </div>
-                <div class="attr">
-                  <a target="_blank" href="item.html" title="促销信息，下单即赠送三个月CIBN视频会员卡！【小米电视新品4A 58 火爆预约中】">Apple苹果iPhone
-                    6s (A1699)Apple苹果iPhone 6s (A1699)Apple苹果iPhone 6s (A1699)Apple苹果iPhone 6s (A1699)</a>
-                </div>
-                <div class="commit">
-                  <i class="command">已有<span>2000</span>人评价</i>
-                </div>
-                <div class="operate">
-                  <a href="success-cart.html" target="_blank" class="sui-btn btn-bordered btn-danger">加入购物车</a>
-                  <a href="javascript:void(0);" class="sui-btn btn-bordered">收藏</a>
-                </div>
-              </div>
             </ul>
           </div>
-          <div class="fr page">
-            <div class="sui-pagination clearfix">
-              <ul>
-                <li class="prev disabled">
-                  <a href="#">«上一页</a>
-                </li>
-                <li class="active">
-                  <a href="#">1</a>
-                </li>
-                <li>
-                  <a href="#">2</a>
-                </li>
-                <li>
-                  <a href="#">3</a>
-                </li>
-                <li>
-                  <a href="#">4</a>
-                </li>
-                <li>
-                  <a href="#">5</a>
-                </li>
-                <li class="dotted"><span>...</span></li>
-                <li class="next">
-                  <a href="#">下一页»</a>
-                </li>
-              </ul>
-              <div><span>共10页&nbsp;</span></div>
-            </div>
-          </div>
+          <r-pagination :pageNo="searchParams.pageNo" :pageSize="searchParams.pageSize" :total="total" :continues="5"
+            @getPageNo="getPageNo" />
         </div>
       </div>
     </div>
@@ -130,7 +81,7 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
+import { mapGetters, mapState } from 'vuex'
 import SearchSelector from './SearchSelector/SearchSelector'
 export default {
   name: 'RSearch',
@@ -139,7 +90,7 @@ export default {
   },
   data() {
     return {
-      searchParams: { props: [], order: '1:desc' },
+      searchParams: { props: [], order: '1:desc', pageNo: 1, pageSize: 3 },
     }
   },
   methods: {
@@ -191,7 +142,7 @@ export default {
       this.getData()
     },
     // 升序或降序
-    changeOrder(flag){
+    changeOrder(flag) {
       let order = this.searchParams.order
       // order = num:sort
       let num = order.split(':')[0]
@@ -199,26 +150,34 @@ export default {
         this.searchParams.order = `${flag}:desc`
       } else {
         let sort = order.split(':')[1]
-        this.searchParams.order = `${flag}:${sort === 'desc'? 'asc' : 'desc'}`
+        this.searchParams.order = `${flag}:${sort === 'desc' ? 'asc' : 'desc'}`
       }
 
       this.getData()
     },
+    // 获取当前页
+    getPageNo(pageNo) {
+      this.searchParams.pageNo = pageNo
+      this.getData()
+    }
   },
   computed: {
     ...mapGetters(['goodsList']),
     // 是否按照价格排序
-    PriceSort() { 
+    PriceSort() {
       return this.searchParams.order.includes('2')
     },
     // 是否按照综合排序
-    CompreSort() { 
+    CompreSort() {
       return this.searchParams.order.includes('1')
     },
     // 是否升序
-    Order() { 
+    Order() {
       return this.searchParams.order.includes('desc') ? '↓' : '↑'
     },
+    ...mapState({
+      total: state => state.search.searchList.total
+    })
   },
   watch: {
     $route() {
@@ -569,4 +528,5 @@ export default {
       }
     }
   }
-}</style>
+}
+</style>
