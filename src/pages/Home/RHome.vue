@@ -2,11 +2,17 @@
     <div>
         <!-- 三级联动全局组件 -->
         <TypeNav />
+        <!-- 主页右侧模块 -->
         <list-container />
+        <!-- 主页推荐模块 -->
         <Recommend />
+        <!-- 主页排行模块 -->
         <Rank />
+        <!-- 主页兴趣模块 -->
         <Like />
+        <!-- 主页轮播图模块 -->
         <Floor v-for="floor in floorList" :key="floor.id" :list="floor"/>
+        <!-- 主页商标模块 -->
         <Brand />
     </div>
 </template>

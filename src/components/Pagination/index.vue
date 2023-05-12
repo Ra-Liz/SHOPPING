@@ -1,13 +1,13 @@
 <template>
     <div class="pagination">
         <button :disabled="pageNo <= 1" @click="$emit('getPageNo', pageNo - 1)">上一页</button>
-        <button v-if="startAend.start !== 1" @click="$emit('getPageNo', 1)" :class="{active: pageNo === 1}">1</button>
+        <button v-if="startAend.start !== 1" @click="$emit('getPageNo', 1)">1</button>
         <button v-if="startAend.start > 2">···</button>
 
         <button v-for="page in range" :key="page" @click="$emit('getPageNo', page)" :class="{active: pageNo === page}">{{ page }}</button>
 
         <button v-if="startAend.end < totalPage">···</button>
-        <button v-if="startAend.end !== totalPage" @click="$emit('getPageNo', totalPage)" :class="{active: pageNo === totalPage}">{{ totalPage }}</button>
+        <button v-if="startAend.end !== totalPage" @click="$emit('getPageNo', totalPage)">{{ totalPage }}</button>
         <button :disabled="pageNo >= totalPage" @click="$emit('getPageNo', pageNo + 1)">下一页</button>
 
         <button style="margin-left: 30px">共 {{ total }} 条</button>
@@ -18,11 +18,6 @@
 export default {
     name: 'RPagination',
     props: ['pageNo', 'pageSize', 'total', 'continues'],
-    data() {
-        return {
-            arr: []
-        }
-    },
     computed: {
         totalPage() {
             return Math.ceil(this.total/this.pageSize)

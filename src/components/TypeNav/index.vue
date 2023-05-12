@@ -3,7 +3,7 @@
     <div class="type-nav">
         <div class="container" @mouseleave="leaveShow">
             <h2 class="all" @mouseenter="enterShow">全部商品分类</h2>
-
+            <!-- 其他 -->
             <nav class="nav">
                 <a href="###">服装城</a>
                 <a href="###">美妆馆</a>
@@ -14,7 +14,7 @@
                 <a href="###">有趣</a>
                 <a href="###">秒杀</a>
             </nav>
-
+            <!-- 三级联动展示 -->
             <transition name="sort">
                 <div class="sort" v-show="show">
                     <div class="all-sort-list2" @click="goSearch" @mouseleave="leaveIndex">
@@ -61,27 +61,28 @@ export default {
         }
     },
     methods: {
+        // 鼠效-改变坐标
         changeIndex: throttle(function (index) {
             this.currentIndex = index
         }, 10),
-
+        // 鼠效-鼠标离开
         leaveIndex() {
             this.currentIndex = -1
             if (this.$route.name === 'search') {
                 this.show = false
             }
         },
-
+        // 鼠效-进效果
         enterShow() {
             this.show = true
         },
-
+        // 鼠效-出效果
         leaveShow() {
             if (this.$route.name == 'search') {
                 this.show = false
             }
         },
-
+        // 三级-获取标签，搜索对应信息
         goSearch(event) {
             // 编程式导航+事件委托
             let element = event.target
@@ -108,11 +109,13 @@ export default {
         }
     },
     mounted() {
+        // 鼠效-区分不同页面效果
         if (this.$route.name == 'search') {
             this.show = false
         }
     },
     computed: {
+        // 三级-获取三级联动信息
         ...mapState({
             categoryList: state => state.home.categoryList
         })

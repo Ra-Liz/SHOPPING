@@ -25,11 +25,12 @@
           </ul>
         </div>
 
-        <!--selector-->
+        <!--selector属性选择框-->
         <SearchSelector @trademarkInfo="trademarkInfo" @attrInfo="attrInfo" />
 
         <!--details-->
         <div class="details clearfix">
+          <!-- 排序选项 -->
           <div class="sui-navbar">
             <div class="navbar-inner filter">
               <ul class="sui-nav">
@@ -43,6 +44,7 @@
               </ul>
             </div>
           </div>
+          <!-- 商品列表 -->
           <div class="goods-list">
             <ul class="yui3-g">
               <li class="yui3-u-1-5" v-for="good in goodsList" :key="good.id">
@@ -72,6 +74,7 @@
               </li>
             </ul>
           </div>
+          <!-- 分页 -->
           <r-pagination :pageNo="searchParams.pageNo" :pageSize="searchParams.pageSize" :total="total" :continues="5"
             @getPageNo="getPageNo" />
         </div>
@@ -90,14 +93,16 @@ export default {
   },
   data() {
     return {
+      // 排序-初始化请求参数
       searchParams: { props: [], order: '1:desc', pageNo: 1, pageSize: 3 },
     }
   },
   methods: {
+    // 排序-发送请求的函数
     getData() {
       this.$store.dispatch('getSearchList', this.searchParams)
     },
-    // 删除categoryName面包屑
+    // bread-删除categoryName面包屑
     removeCategoryName() {
       alert("delete!!!categoryname")
       this.searchParams.categoryName = undefined
@@ -106,26 +111,26 @@ export default {
       this.searchParams.category3Id = undefined
       this.$router.push({ name: 'search', params: this.$route.params })
     },
-    // 删除keyword面包屑
+    // bread-删除keyword面包屑
     removeKeyword() {
       alert("delete!!!keyword")
       this.searchParams.keyword = undefined
       this.$bus.$emit('clear')
       this.$router.push({ name: 'search', query: this.$route.query })
     },
-    // 自定义事件回调
+    // bread-自定义事件回调
     trademarkInfo(trademark) {
       console.log("父组件获取到了", trademark)
       this.searchParams.trademark = `${trademark.tmId}:${trademark.tmName}`
       this.getData()
     },
-    // 删除品牌面包屑
+    // bread-删除品牌面包屑
     removeTradeMark() {
       alert("delete!!!trademark")
       this.searchParams.trademark = undefined
       this.getData()
     },
-    // 获取属性
+    // bread-获取属性
     attrInfo(attr, attrvalue) {
       console.log("父组件获取到了", attr, attrvalue)
       let item = `${attr.attrId}:${attrvalue}:${attr.atteName}`
@@ -135,13 +140,13 @@ export default {
       console.log(this.searchParams.props)
       this.getData()
     },
-    // 删除属性
+    // bread-删除属性面包屑
     removeAttr(index) {
       alert("delete!!!attr")
       this.searchParams.props.splice(index, 1)
       this.getData()
     },
-    // 升序或降序
+    // 排序-升序或降序
     changeOrder(flag) {
       let order = this.searchParams.order
       // order = num:sort
@@ -155,7 +160,7 @@ export default {
 
       this.getData()
     },
-    // 获取当前页
+    // 分页-获取当前页
     getPageNo(pageNo) {
       this.searchParams.pageNo = pageNo
       this.getData()
@@ -163,23 +168,25 @@ export default {
   },
   computed: {
     ...mapGetters(['goodsList']),
-    // 是否按照价格排序
+    // 排序-是否按照价格排序
     PriceSort() {
       return this.searchParams.order.includes('2')
     },
-    // 是否按照综合排序
+    // 排序-是否按照综合排序
     CompreSort() {
       return this.searchParams.order.includes('1')
     },
-    // 是否升序
+    // 排序-是否升序
     Order() {
       return this.searchParams.order.includes('desc') ? '↓' : '↑'
     },
+    // 分页-获取总信息数
     ...mapState({
       total: state => state.search.searchList.total
     })
   },
   watch: {
+    // 排序-监视路由内容，重新上路由，捞取数据
     $route() {
       Object.assign(this.searchParams, this.$route.query, this.$route.params)
       this.getData()
@@ -189,9 +196,11 @@ export default {
     }
   },
   beforeMount() {
+    // 排序-挂载前配置好post参数
     Object.assign(this.searchParams, this.$route.query, this.$route.params)
   },
   mounted() {
+    // 排序-挂载时去发请求捞数据
     this.getData()
   },
 }

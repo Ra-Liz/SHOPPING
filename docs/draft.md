@@ -1870,17 +1870,118 @@ RSearch.vue
 
 ## 分页器组件-第一场硬仗	
 
-
-
 ### 为什么要分页？
 
-### 怎么分页？
+1. 
+   改善性能：在应用程序中加载和显示大量数据可能导致性能问题。通过将数据分成多个页面，只有当前页的数据需要加载和显示，从而减少了数据传输和处理的负担，提高了应用程序的性能。
+2. 用户友好性：当应用程序中的数据量较大时，将所有数据一次性显示给用户可能会导致信息过载和困惑。通过将数据分页显示，用户可以逐页浏览和处理数据，使用户界面更加简洁和易于使用。
+3. 快速导航：分页组件通常提供了导航功能，使用户能够快速跳转到所需的页面。用户可以通过点击页码或使用其他导航控件来浏览不同的数据页面，提供了更好的用户体验。
+4. 数据分析和统计：分页组件使得对大量数据进行分析和统计更加方便。用户可以根据需要在不同页面上执行排序、筛选和搜索等操作，以获取所需的数据视图。
+5. 响应式设计：分页组件可以根据不同的屏幕尺寸和设备类型进行适应，从而实现响应式设计。这使得应用程序在各种设备上都能提供良好的用户体验，无论是在桌面电脑、平板电脑还是移动设备上。
+
+### 简单实现
+
+一定要想好逻辑！！
+
+显示：上一页-1-...-连续分页-...-最后一页-下一页-信息总数
+
+传入：当前页，信息总数，连续页数
+
+操作：点击对应页数则到对应页数，上一页，下一页；没有小于1的页和大于总页数的页；对应页数对应信息
+
+Pagination组件
+
+```vue
+<template>
+    <div class="pagination">
+        <!-- 页数超过范围时，上一页/下一页无效；点击对应页时开启父组件自定义事件，传入页数 -->
+        <button :disabled="pageNo <= 1" @click="$emit('getPageNo', pageNo - 1)">上一页</button>
+        <!-- 如果当前页是首页或末尾页，那么初始的首页和末尾页不显示 -->
+        <button v-if="startAend.start !== 1" @click="$emit('getPageNo', 1)">1</button>
+        <!-- 如果页数是首页末尾页/首页+1末尾页-1，那么省略不显示 -->
+        <button v-if="startAend.start > 2">···</button>
+		<!-- 遍历连续分页，均绑定父组件的自定义事件，方便传参 -->
+        <button v-for="page in range" :key="page" @click="$emit('getPageNo', page)" :class="{active: pageNo === page}">{{ page }}</button>
+
+        <button v-if="startAend.end < totalPage">···</button>
+        <button v-if="startAend.end !== totalPage" @click="$emit('getPageNo', totalPage)">{{ totalPage }}</button>
+        <button :disabled="pageNo >= totalPage" @click="$emit('getPageNo', pageNo + 1)">下一页</button>
+        <button style="margin-left: 30px">共 {{ total }} 条</button>
+    </div>
+</template>
+  
+<script>
+export default {
+    name: 'RPagination',
+    props: ['pageNo', 'pageSize', 'total', 'continues'],
+    computed: {
+        // 获取总页数
+        totalPage() { 
+            return Math.ceil(this.total/this.pageSize)
+        },
+        // 获取连续分页的首尾值
+        startAend() {
+            let start = 0, end = 0
+            if (this.totalPage < this.continues) {
+                start = 1
+                end = this.totalPage
+            } else {
+                start = this.pageNo - Math.floor(this.continues/2)
+                end = this.pageNo + Math.floor(this.continues/2)
+                if (start < 1) {
+                    start = 1
+                    end = this.continues
+                } else if (end > this.totalPage) {
+                    end = this.totalPage
+                    start = end - this.continues + 1
+                }
+            }
+            
+            return { start, end }
+        },
+        // 连续分页数组
+        range() {
+            const { start, end } = this.startAend
+            return Array.from({ length: end - start + 1 }, (_, index) => start + index)
+        },
+    },
+}
+</script>
+```
+
+父组件
+
+```vue
+<template>
+<!-- 传入当前页、每页信息数、总信息数、连续页数，绑定获取当前页的自定义事件 -->
+<r-pagination :pageNo="searchParams.pageNo" 
+              :pageSize="searchParams.pageSize" 
+              :total="total" 
+              :continues="5"
+              @getPageNo="getPageNo" />
+</template>
+<script>
+	methods： {
+        // 获取当前页-自定义事件
+        getPageNo(pageNo) { 
+          this.searchParams.pageNo = pageNo // 获取当前页
+          this.getData() // 重新捞数据
+        }
+    } 
+    computed: {
+        // 请求获取总信息数
+        ...mapState({
+          total: state => state.search.searchList.total
+        })
+    }
+</script>
+```
+
+做完这个之后我尝试做了一下TryUI的分页组件，蛮顺利的，在那里我使用了ts setup，在组件内对分页的一些参数设置了默认值，并且定义了一个获取当前页数的方法。同时，给父组件提供了可自定义的选中色彩。下一步优化的话，我觉得可以先对外明确好父组件可以拿到什么参（当前页必须得方便拿到），还可以供父组件自定义分页的排版格式。
 
 
 
-
-
-（打算做的组件：跑马灯、面包屑）
+（打算做的组件：~~分页~~、跑马灯、面包屑）
 
 
 
