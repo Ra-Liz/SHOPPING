@@ -51,7 +51,10 @@
                 <div class="list-wrap">
                   <div class="p-img">
                     <a href="item.html" target="_blank">
-                      <img :src="good.defaultImg" />
+                      <!-- 声明式导航，模板字符串带着id参数跳转，切记切记 -->
+                      <router-link :to="`/detail/${good.id}`">
+                        <img :src="good.defaultImg" />
+                      </router-link>
                     </a>
                   </div>
                   <div class="price">

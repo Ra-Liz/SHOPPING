@@ -1979,6 +1979,95 @@ export default {
 
 做完这个之后我尝试做了一下TryUI的分页组件，蛮顺利的，在那里我使用了ts setup，在组件内对分页的一些参数设置了默认值，并且定义了一个获取当前页数的方法。同时，给父组件提供了可自定义的选中色彩。下一步优化的话，我觉得可以先对外明确好父组件可以拿到什么参（当前页必须得方便拿到），还可以供父组件自定义分页的排版格式。
 
+## 详情页
+
+点击商品列表信息进入对应商品详情页，老套路再来一遍！
+
+### 拆分静态&配置路由
+
+拆分好Detail静态组件，配置好跳转路由
+
+```vue
+<!-- 使用声明式导航，模板字符串带着id参数跳转，切记切记 -->
+<router-link :to="`/detail/${good.id}`">
+<img :src="good.defaultImg" />
+</router-link>
+```
+
+```js
+{
+    path: '/detail/:skuId', // 要传入商品id才能查找对应商品详情信息
+    component: Detail,
+    meta: {show: true},
+    name: 'detail'
+}
+```
+
+### 写API
+
+配置请求
+
+```js
+export const getGoodsInfo = (skuId) => requests({
+    url: `/item/${skuId}`,
+    methods: 'get'
+})
+```
+
+### 写Vuex管理
+
+新建Detail模块并在store/index.js中引入
+
+```js
+import {reqGetGoodsInfo} from '@/api'
+
+const state = {
+    goodsInfo: {}
+}
+const actions = {
+    async getGoodsInfo({commit}, value) {
+        let result = await reqGetGoodsInfo(value)
+        if (result.status === 200) {
+            commit('GETGOODSINFO', result.data)
+        }
+    }
+}
+const mutations = {
+    GETGOODSINFO(state, goodsInfo) {
+        state.goodsInfo = goodsInfo
+    }
+}
+const getters = {}
+
+export defualt {
+    state,actions,mutations,getters
+}
+```
+
+### 派发actions
+
+在挂载完成时`mounted`派发actions，以获取产品详情（记得传参啊记得！！！！）
+
+```vue
+<script>
+    mounted() {
+        this.$store.dispatch('getGoodsInfo', this.$route.params.skuId)
+    }
+</script>
+```
+
+### 展示动态数据
+
+ 
+
+
+
+
+
+
+
+
+
 
 
 （打算做的组件：~~分页~~、跑马灯、面包屑）

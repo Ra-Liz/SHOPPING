@@ -78,7 +78,7 @@ export default {
         },
         // 鼠效-出效果
         leaveShow() {
-            if (this.$route.name == 'search') {
+            if (this.$route.name !== 'home') {
                 this.show = false
             }
         },
@@ -86,6 +86,7 @@ export default {
         goSearch(event) {
             // 编程式导航+事件委托
             let element = event.target
+            console.log("编程式导航：要传递的element↓", element)
             console.log("编程式导航：要传递的element.dataset↓", element.dataset)
             let { categoryname, category1id, category2id, category3id } = element.dataset
             
@@ -110,7 +111,7 @@ export default {
     },
     mounted() {
         // 鼠效-区分不同页面效果
-        if (this.$route.name == 'search') {
+        if (this.$route.name !== 'home') {
             this.show = false
         }
     },
