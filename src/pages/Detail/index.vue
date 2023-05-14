@@ -65,15 +65,19 @@
               <div class="choosed"></div>
               <dl v-for="attrlist in skuSaleAttrValueList" :key="attrlist.id">
                 <dt class="title">选择{{ attrlist.saleAttrName }}</dt>
-                <dd v-for="attr in attrlist.spuSaleAttrValueList" :key="attr.id" changepirce="0"
-                  :class="{ active: attr.isChecked === '1' }">{{ attr.saleAttrValueName }}</dd>
+                <dd v-for="attr in attrlist.spuSaleAttrValueList" 
+                  :key="attr.id" changepirce="0"
+                  :class="{ active: attr.isChecked === '1' }" 
+                  @click="changeActive(attr, attrlist.spuSaleAttrValueList)">
+                  {{ attr.saleAttrValueName }}
+                </dd>
               </dl>
             </div>
             <div class="cartWrap">
               <div class="controls">
-                <input autocomplete="off" class="itxt">
-                <a href="javascript:" class="plus">+</a>
-                <a href="javascript:" class="mins">-</a>
+                <input autocomplete="off" class="itxt" v-model="skuNum" @change="changeSkuNum" />
+                <a href="javascript:" class="plus" @click="skuNum<maxNum ? skuNum++ : skuNum = maxNum">+</a>
+                <a href="javascript:" class="mins" @click="skuNum>0 ? skuNum-- : skuNum = 0">-</a>
               </div>
               <div class="add">
                 <a href="javascript:">加入购物车</a>
@@ -337,11 +341,35 @@ export default {
     ImageList,
     Zoom
   },
+  data() {
+    return {
+      maxNum: 999,
+      skuNum: 0,
+    }
+  },
   computed: {
     ...mapGetters(['categoryView', 'skuInfo', 'skuSaleAttrValueList']),
 
     skuImageList() {
       return this.skuInfo.skuImageList || []
+    }
+  },
+  methods: {
+    // 排他-售卖属性点击选中切换
+    changeActive(attr, attrlist) {
+      attrlist.forEach(item => {
+        item.isChecked = '0'
+      });
+      attr.isChecked = '1'
+    },
+    // 判定输入框合法性
+    changeSkuNum(event) {
+      let num = event.target.value * 1
+      if (isNaN(num) || num < 0 || num > this.maxNum) {
+        this.skuNum = 0
+      } else {
+        this.skuNum = Math.floor(num)
+      }
     }
   },
   mounted() {

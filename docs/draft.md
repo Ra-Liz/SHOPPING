@@ -2058,7 +2058,187 @@ export defualt {
 
 ### 展示动态数据
 
- 
+####  导航路径区域
+
+拿到数据直接怼
+
+```vue
+<div class="conPoin">
+    <span v-show="categoryView.category1Name">{{ categoryView.category1Name }}</span>
+    <span v-show="categoryView.category2Name">{{ categoryView.category2Name }}</span>
+    <span v-show="categoryView.category3Name">{{ categoryView.category3Name }}</span>
+</div>
+```
+
+#### 主要内容-左侧放大镜区域
+
+父组件向子组件传递
+
+```vue
+<template>
+    <Zoom :skuImageList="skuImageList" />
+    <ImageList :skuImageList="skuImageList" />
+</template>
+<script>
+    ....
+    computed: {
+        ...mapGetters(['skuInfo']),
+        skuImageList() {
+            return this.skuInfo.skuImageList || []
+        }
+    }
+    ....
+</script>
+```
+
+##### 放大镜效果Zoom
+
+对图片进行放大，要用到event.target获取相关节点的尺寸/距离参数
+
+```vue
+<template>
+  <div class="spec-preview">
+    <img :src="imgObj.imgUrl" />
+    <div class="event" @mousemove="handler"></div>
+    <div class="big">
+      <img :src="imgObj.imgUrl" ref="big" />
+    </div>
+    <div class="mask" ref="mask"></div>
+  </div>
+</template>
+
+<script>
+  	....
+    methods: {
+	  // 绑定鼠标移动事件，定位好遮罩和大图的显示
+      handler(event) {
+        let mask = this.$refs.mask
+        let big = this.$refs.big
+        let left = event.offsetX - mask.offsetWidth/2
+        let top = event.offsetY - mask.offsetHeight/2
+        if (left < 0) { // 框定遮罩水平距离
+          left = 0
+        } else if (left > mask.offsetWidth) {
+          left = mask.offsetWidth
+        }
+        mask.style.left = left + 'px' // 鼠标距离左侧框距离
+
+        if (top < 0) { // 框定遮罩垂直距离
+          top = 0
+        } else if (top > mask.offsetHeight) {
+          top = mask.offsetHeight
+        }
+        mask.style.top = top + 'px' // 鼠标距离顶部框距离
+
+        big.style.left = -2 * left + 'px' // 大图水平位置
+        big.style.top = -2 * top + 'px' // 大图垂直位置
+      }
+    },
+    props: ['skuImageList'], // 父组件传递图片对象参数
+    computed: {
+      imgObj() {
+        return this.skuImageList[this.curIndex] || {} // 展示对应图片
+      }
+    },
+    mounted() {
+      this.$bus.$on('getIndex', (index) => { // $bus获取兄弟组件图片对象索引，替换默认索引，展示对应图像
+        this.curIndex = index
+      })
+    }
+  }
+</script>
+```
+
+##### 小图列表ImageList
+
+获取商品信息中要展示的图片列表，套用轮播组件，供选择查看
+
+```vue
+<template>
+    ....
+	<img :src="slide.imgUrl" :class="{active: currentIndex === index}" @click="changeCurIndex(index)">
+</template>
+<script>
+methods: {
+    // 绑定点击事件，获取当前图片索引，传递给兄弟组件Zoom进行展示
+    changeCurIndex(index) {
+      this.currentIndex = index
+      this.$bus.$emit('getIndex', index)
+    }
+},
+watch: {
+    // 监听可以保证数据肯定有，但无法保证v-for遍历结构是否完成
+    skuImageList() {
+      this.$nextTick(() => {
+        new Swiper(this.$refs.cur, {
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev'
+          },
+          sliderPerView: 4,
+        })
+      })
+    }
+}
+</script>
+```
+
+#### 主要内容-右侧选择区域
+
+基本参数的显示略
+
+##### 选择属性高亮
+
+利用排他方式，点击回调中先将所有元素的`isChecked`置0，然后将点到的元素`isChecked`置1
+
+```vue
+<template>
+<dd v-for="attr in attrlist.spuSaleAttrValueList" 
+  :key="attr.id" changepirce="0"
+  :class="{ active: attr.isChecked === '1' }" 
+  @click="changeActive(attr, attrlist.spuSaleAttrValueList)">
+  {{ attr.saleAttrValueName }}
+</dd>
+</template>
+<script>
+    methods: {
+        changeActive(attr, attrList) {
+            attrList.forEach((item) => {
+                item.isChecked = '0'
+            })
+            attr.isChecked = '1'
+        }
+    }
+</script>
+```
+
+##### 购物数量
+
+Input框正整数逻辑
+
+```vue
+<template>
+<div class="controls">
+    <input autocomplete="off" class="itxt" v-model="skuNum" @change="changeSkuNum" />
+    <a href="javascript:" class="plus" @click="skuNum<maxNum ? skuNum++ : skuNum = maxNum">+</a>
+    <a href="javascript:" class="mins" @click="skuNum>0 ? skuNum-- : skuNum = 0">-</a>
+</div>
+</template>
+<script>
+    methods: {
+        changeSkuNum(event) {
+            let num = event.target.value * 1	
+            if (isNaN(num) || num < 0 || num > this.maxNum) {
+                this.skuNum = 0
+            } else {
+                this.skuNum = Math.floor(num)
+            }
+        }
+    }
+</script>
+```
+
+## 添加购物车
 
 
 

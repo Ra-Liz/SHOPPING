@@ -1,22 +1,57 @@
 <template>
   <div class="spec-preview">
     <img :src="imgObj.imgUrl" />
-    <div class="event"></div>
+    <div class="event" @mousemove="handler"></div>
     <div class="big">
-      <img :src="imgObj.imgUrl" />
+      <img :src="imgObj.imgUrl" ref="big" />
     </div>
-    <div class="mask"></div>
+    <div class="mask" ref="mask"></div>
   </div>
 </template>
 
 <script>
   export default {
     name: "RZoom",
+    data() {
+      return {
+        curIndex: 0,
+      }
+    },
+    methods: {
+      handler(event) {
+        let mask = this.$refs.mask
+        let big = this.$refs.big
+        let left = event.offsetX - mask.offsetWidth/2
+        let top = event.offsetY - mask.offsetHeight/2
+        if (left < 0) {
+          left = 0
+        } else if (left > mask.offsetWidth) {
+          left = mask.offsetWidth
+        }
+        mask.style.left = left + 'px'
+
+        if (top < 0) {
+          top = 0
+        } else if (top > mask.offsetHeight) {
+          top = mask.offsetHeight
+        }
+        mask.style.top = top + 'px'
+
+        big.style.left = -2 * left + 'px'
+        big.style.top = -2 * top + 'px'
+      }
+    },
     props: ['skuImageList'],
     computed: {
       imgObj() {
-        return this.skuImageList[0] || {}
+        return this.skuImageList[this.curIndex] || {}
       }
+    },
+    mounted() {
+      // 获取兄弟组件传递的索引值，实现图片显示切换
+      this.$bus.$on('getIndex', (index) => {
+        this.curIndex = index
+      })
     }
   }
 </script>
@@ -45,7 +80,7 @@
     .mask {
       width: 50%;
       height: 50%;
-      background-color: rgba(0, 255, 0, 0.3);
+      background-color: rgba(255, 1, 1, 0.3);
       position: absolute;
       left: 0;
       top: 0;
