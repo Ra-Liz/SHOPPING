@@ -1,15 +1,27 @@
-import { reqGetGoodsInfo } from "@/api"
-
+import { reqAddOrUpdateShopCar, reqGetGoodsInfo } from "@/api"
+import { getUUID } from '@/utils/uuid_token'
 const state = {
     goodsInfo: {},
+    // 游客临时身份
+    uuid_token: getUUID()
 }
 
 const actions = {
+    // 获取商品内容
     async getGoodsInfo({commit}, value) {
         let result = await reqGetGoodsInfo(value)
         console.log("请求获取到的goods内容↓", result.data)
         if (result.status === 200) {
             commit('GETGOODSINFO', result.data)
+        }
+    },
+    // 加购物车
+    async addShopCar({skuId, skuNum}) {
+        let result = await reqAddOrUpdateShopCar(skuId, skuNum)
+        if (result.status === 200) {
+            return 'ok'
+        } else {
+            return Promise.reject(new Error('faile'))
         }
     }
 }
@@ -17,7 +29,7 @@ const actions = {
 const mutations = {
     GETGOODSINFO(state, goodsInfo) {
         state.goodsInfo = goodsInfo.data
-    }
+    },
 }
 
 const getters = {

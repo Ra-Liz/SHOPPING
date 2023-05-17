@@ -80,7 +80,7 @@
                 <a href="javascript:" class="mins" @click="skuNum>0 ? skuNum-- : skuNum = 0">-</a>
               </div>
               <div class="add">
-                <a href="javascript:">加入购物车</a>
+                <a @click="addShopCar()">加入购物车</a>
               </div>
             </div>
           </div>
@@ -370,7 +370,17 @@ export default {
       } else {
         this.skuNum = Math.floor(num)
       }
-    }
+    },
+    // 加购物车
+    async addShopCar() {
+      try{ // 派发请求并获取成功：路由跳转
+        await this.$store.dispatch('addShopCar', {skuId: this.$route.params.skuId, skuNum: this.skuNum})
+        sessionStorage.setItem('SKUINFO', JSON.stringify(this.skuInfo))
+        this.$router.push({name: 'addCartSuccess'})
+      } catch (error) { // 失败：
+        alert(error.message)
+      }
+    },
   },
   mounted() {
     // 派发actions获取产品详情信息
