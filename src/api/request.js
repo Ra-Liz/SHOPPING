@@ -12,7 +12,6 @@ const requests = axios.create({
 requests.interceptors.request.use((config) => {
     if (store.state.detail.uuid_token) {
         // 请求头添加字段userTempId（一定要和后端协商好）
-        console.log(store)
         config.headers.userTempId = store.state.detail.uuid_token
     }
     nprogress.start()

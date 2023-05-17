@@ -77,10 +77,10 @@
               <div class="controls">
                 <input autocomplete="off" class="itxt" v-model="skuNum" @change="changeSkuNum" />
                 <a href="javascript:" class="plus" @click="skuNum<maxNum ? skuNum++ : skuNum = maxNum">+</a>
-                <a href="javascript:" class="mins" @click="skuNum>0 ? skuNum-- : skuNum = 0">-</a>
+                <a href="javascript:" class="mins" @click="skuNum>1 ? skuNum-- : skuNum = 1">-</a>
               </div>
               <div class="add">
-                <a @click="addShopCar()">加入购物车</a>
+                <a @click="addShopCar">加入购物车</a>
               </div>
             </div>
           </div>
@@ -344,7 +344,7 @@ export default {
   data() {
     return {
       maxNum: 999,
-      skuNum: 0,
+      skuNum: 1,
     }
   },
   computed: {
@@ -365,8 +365,8 @@ export default {
     // 判定输入框合法性
     changeSkuNum(event) {
       let num = event.target.value * 1
-      if (isNaN(num) || num < 0 || num > this.maxNum) {
-        this.skuNum = 0
+      if (isNaN(num) || num < 1 || num > this.maxNum) {
+        this.skuNum = 1
       } else {
         this.skuNum = Math.floor(num)
       }
@@ -376,8 +376,8 @@ export default {
       try{ // 派发请求并获取成功：路由跳转
         await this.$store.dispatch('addShopCar', {skuId: this.$route.params.skuId, skuNum: this.skuNum})
         sessionStorage.setItem('SKUINFO', JSON.stringify(this.skuInfo))
-        this.$router.push({name: 'addCartSuccess'})
-      } catch (error) { // 失败：
+        this.$router.push({name: 'addCartSuccess', query: {skuNum: this.skuNum}})
+      } catch (error) {
         alert(error.message)
       }
     },

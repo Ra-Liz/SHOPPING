@@ -16,7 +16,8 @@ const actions = {
         }
     },
     // 加购物车
-    async addShopCar({skuId, skuNum}) {
+    async addShopCar(_, {skuId, skuNum}) {
+        console.log(skuId, skuNum) // test
         let result = await reqAddOrUpdateShopCar(skuId, skuNum)
         if (result.status === 200) {
             return 'ok'
