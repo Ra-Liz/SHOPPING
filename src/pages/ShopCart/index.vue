@@ -13,7 +13,7 @@
       <div class="cart-body">
         <ul class="cart-list" v-for="cart in cartInfoList" :key="cart.id">
           <li class="cart-list-con1">
-            <input type="checkbox" name="chk_list" :checked="cart.isChecked === 1" />
+            <input type="checkbox" name="chk_list" :checked="cart.isChecked === 1" @change="updateChecked(cart, $event)" />
           </li>
           <li class="cart-list-con2">
             <img :src="cart.imgUrl">
@@ -41,13 +41,13 @@
     </div>
     <div class="cart-tool">
       <div class="select-all">
-        <input class="chooseAll" type="checkbox" :checked="isAllChecked" />
+        <input class="chooseAll" type="checkbox" :checked="isAllChecked && cartInfoList.length>0" @change="updateAllChecked" />
         <span>全选</span>
       </div>
       <div class="option">
-        <a href="#none">删除选中的商品</a>
-        <a href="#none">移到我的关注</a>
-        <a href="#none">清除下柜商品</a>
+        <a @click="deleteAllChecked">删除选中的商品</a>
+        <a>移到我的关注</a>
+        <a>清除下柜商品</a>
       </div>
       <div class="money-box">
         <div class="chosed">已选择
@@ -74,10 +74,6 @@ export default {
     getData() {
       this.$store.dispatch('getCartList')
     },
-    // 全选/取消全选-未完成
-    checkAll() {
-      return
-    },
     // 商品数量操作
     handler: throttle(async function(type, disNum, cart) {
       // 更改商品数量
@@ -96,7 +92,7 @@ export default {
       } catch (error) {
         alert(error)
       }
-    }, 1000),
+    }, 500),
     // 删除产品操作
     async deleteCartById(cart) {
       try{
@@ -104,6 +100,37 @@ export default {
         await this.$store.dispatch('deleteCartById', cart.skuId)
         this.getData()
       } catch (error) {
+        alert(error.message)
+      }
+    },
+    // 修改产品选中状态
+    async updateChecked(cart, event) {
+      console.log(cart.isChecked)
+      let checked = event.target.checked ? 1 : 0
+      console.log(checked)
+      try{
+        await this.$store.dispatch('updateCheckedById', {skuId: cart.skuId, isChecked: checked})
+        this.getData()
+      } catch (error) {
+        alert(error.message)
+      }
+    },
+    // 删除所有选中产品
+    async deleteAllChecked() {
+      try{
+        await this.$store.dispatch('deleteAllChecked')
+        this.getData()
+      } catch(error) {
+        alert(error.message)
+      }
+    },
+    // 全选/全不选
+    async updateAllChecked(event) {
+      let checked = event.target.checked ? 1 : 0
+      try{
+        await this.$store.dispatch('updateAllChecked', checked)
+        this.getData()
+      } catch(error) {
         alert(error.message)
       }
     }
