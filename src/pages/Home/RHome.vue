@@ -37,8 +37,10 @@ export default {
         Brand,
     },
     mounted() {
-        this.$store.dispatch("getFloorList")
-        console.log("home mounted获取floor数据")
+        // 获取floor组件的数据
+        this.$store.dispatch('getFloorList')
+        // 获取用户信息
+        this.$store.dispatch('getUserInfo')
     },
     computed: {
         ...mapState({

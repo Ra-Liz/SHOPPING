@@ -10,9 +10,13 @@ const requests = axios.create({
 })
 // 重写-请求拦截器
 requests.interceptors.request.use((config) => {
+    // 请求头添加字段userTempId（一定要和后端协商好）
     if (store.state.detail.uuid_token) {
-        // 请求头添加字段userTempId（一定要和后端协商好）
         config.headers.userTempId = store.state.detail.uuid_token
+    }
+    // 携带token带给拦截器
+    if (store.state.user.token) {
+        config.headers.token = store.state.user.token
     }
     nprogress.start()
     return config
