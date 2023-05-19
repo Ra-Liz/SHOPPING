@@ -1,8 +1,7 @@
-import { reqGetVertifyCode, reqUserRegister, reqUserLogin, reqUserInfo } from "@/api"
+import { reqGetVertifyCode, reqUserRegister, reqUserLogin, reqUserInfo, reqUserLogout } from "@/api"
 
 const state = {
     vertifyCode: '',
-    token: '',
     userInfo: {}
 }
 const actions = {
@@ -26,11 +25,12 @@ const actions = {
         }
     },
     // 用户登录
-    async userLogin({commit}, user) {
+    async userLogin(_, user) {
         let result = await reqUserLogin(user)
         if (result.status === 200) {
             console.log('用户登录', result.data)
-            commit('USERLOGIN', result.data.data.token)
+            let token = result.data.data.token
+            localStorage.setItem('TOKEN', token)
             return 'ok'
         } else {
             return Promise.reject(new Error('faile'))
@@ -46,18 +46,30 @@ const actions = {
         } else {
             return  Promise.reject(new Error('faile'))
         }
-        
+    },
+    // 用户退出登录
+    async userLogout({commit}) {
+        let result = await reqUserLogout()
+        if (result.status === 200) {
+            console.log('退出请求', result)
+            commit('CLEAR') // 去清除用户数据
+            return 'ok'
+        } else {
+            return Promise.reject(new Error('faile'))
+        }
     }
 }
 const mutations = {
     GETVERTIFYCODE(state, vertifyCode) {
         state.vertifyCode = vertifyCode.data
     },
-    USERLOGIN(state, token) {
-        state.token = token
-    },
     GETUSERINFO(state, userInfo) {
-        state.userInfo = userInfo
+        state.userInfo = userInfo.data
+    },
+    CLEAR(state) {
+        state.userInfo = {}
+        state.vertifyCode = ''
+        localStorage.removeItem('TOKEN')
     }
 }
 const getters = {}

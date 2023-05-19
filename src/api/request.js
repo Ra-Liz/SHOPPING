@@ -10,13 +10,14 @@ const requests = axios.create({
 })
 // 重写-请求拦截器
 requests.interceptors.request.use((config) => {
+    // 这两种方式大同小异，直接从localStorage里拿也行，多走一步state也行，我还是更喜欢直接存直接拿
     // 请求头添加字段userTempId（一定要和后端协商好）
     if (store.state.detail.uuid_token) {
         config.headers.userTempId = store.state.detail.uuid_token
     }
     // 携带token带给拦截器
-    if (store.state.user.token) {
-        config.headers.token = store.state.user.token
+    if (localStorage.getItem('TOKEN')) {
+        config.headers.token = localStorage.getItem('TOKEN')
     }
     nprogress.start()
     return config
