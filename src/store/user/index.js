@@ -2,7 +2,7 @@ import { reqGetVertifyCode, reqUserRegister, reqUserLogin, reqUserInfo, reqUserL
 
 const state = {
     vertifyCode: '',
-    userInfo: {}
+    userInfo: {},
 }
 const actions = {
     // 获取验证码
@@ -39,7 +39,7 @@ const actions = {
     // 获取用户信息
     async getUserInfo({commit}) {
         let result = await reqUserInfo()
-        if (result.status === 200) {
+        if (result.data.code === 200) {
             console.log('用户信息', result.data)
             commit('GETUSERINFO', result.data)
             return 'ok'
@@ -57,20 +57,20 @@ const actions = {
         } else {
             return Promise.reject(new Error('faile'))
         }
-    }
+    },
 }
 const mutations = {
     GETVERTIFYCODE(state, vertifyCode) {
-        state.vertifyCode = vertifyCode.data || ''
+        state.vertifyCode = vertifyCode.data
     },
     GETUSERINFO(state, userInfo) {
-        state.userInfo = userInfo.data || {}
+        state.userInfo = userInfo.data
     },
     CLEAR(state) {
         state.userInfo = {}
         state.vertifyCode = ''
         localStorage.removeItem('TOKEN')
-    }
+    },
 }
 const getters = {}
 

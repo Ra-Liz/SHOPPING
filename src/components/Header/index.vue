@@ -45,6 +45,7 @@
 </template>
 
 <script>
+import { mapState } from 'vuex'
 export default {
     name: "RHeader",
     data() {
@@ -73,8 +74,11 @@ export default {
     },
     computed: {
         userName() {
-            return this.$store.state.user.userInfo.name
-        }
+            return this.userInfo.name
+        },
+        ...mapState({
+            userInfo: state => state.user.userInfo || {}
+        }),
     },
     mounted() {
         this.$bus.$on('clear', () => {

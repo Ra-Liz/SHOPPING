@@ -52,12 +52,12 @@ router.beforeEach(async(to, from, next) => {
       } else { // 登录但无用户信息
         try{ // 发请求获取用户信息成功后，放行
           await store.dispatch('getUserInfo') 
-          console.log('2请求到了用户信息')
+          console.log('请求到了用户信息')
           next()
         } catch(error) { // token失效，清除重新登陆
-          console.log('2失败了！')
+          console.log('请求用户信息失败了')
           await store.dispatch('userLogout')
-          console.log('2用户退出登录一下')
+          console.log('用户退出登录一下')
           next('/login')
         }
       }

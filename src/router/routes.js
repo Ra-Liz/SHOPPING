@@ -4,7 +4,8 @@ import Register from '@/pages/Register'
 import Login from '@/pages/Login'
 import Detail from '@/pages/Detail'
 import AddCartSuccess from '@/pages/AddCartSuccess'
-import shopCart from '@/pages/ShopCart'
+import ShopCart from '@/pages/ShopCart'
+import Trade from '@/pages/Trade'
 /* 
 所有静态路由配置的数组
 */
@@ -52,8 +53,15 @@ export default [
 
   {
     path: '/shopCart',
-    component: shopCart,
+    component: ShopCart,
     meta: {show: true},
     name: 'shopCart'
   },
+
+  {
+    path: '/trade',
+    component: Trade,
+    meta: {show: true},
+    name: 'trade'
+  }
 ]

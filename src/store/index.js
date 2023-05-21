@@ -8,6 +8,7 @@ import home from "./home";
 import detail from "./detail";
 import shopCart from './shopCart'
 import user from './user'
+import trade from './trade'
 
 const store = new Vuex.Store({
     modules: {
@@ -16,6 +17,7 @@ const store = new Vuex.Store({
         detail,
         shopCart,
         user,
+        trade,
     }
 })
 

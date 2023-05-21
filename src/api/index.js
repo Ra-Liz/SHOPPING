@@ -59,13 +59,13 @@ export const reqUserRegister = (params) => requests({
 })
 // 用户登录
 export const reqUserLogin = (params) => requests({
-    url: 'user/passport/login',
+    url: '/user/passport/login',
     method: 'post',
     data: params
 })
 // 获取用户信息
 export const reqUserInfo = () => requests({
-    url: 'user/passport/auth/getUserInfo',
+    url: '/user/passport/auth/getUserInfo',
     method: 'get'
 })
 // 用户退出登录
@@ -73,3 +73,14 @@ export const reqUserLogout = () => requests({
     url: '/user/passport/logout',
     method: 'get'
 })
+// 获取用户地址信息
+export const reqGetUserAddress = () => requests({
+    url: '/user/userAddress/auth/findUserAddressList',
+    method: 'get'
+})
+// 获取商品清单
+export const reqGetOrderInfo = () =>requests({
+    url: '/order/auth/trade',
+    method: 'get'
+})
+//13700000000 111111
