@@ -61,10 +61,10 @@ const actions = {
 }
 const mutations = {
     GETVERTIFYCODE(state, vertifyCode) {
-        state.vertifyCode = vertifyCode.data
+        state.vertifyCode = vertifyCode.data || ''
     },
     GETUSERINFO(state, userInfo) {
-        state.userInfo = userInfo.data
+        state.userInfo = userInfo.data || {}
     },
     CLEAR(state) {
         state.userInfo = {}
