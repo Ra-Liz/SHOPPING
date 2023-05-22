@@ -79,8 +79,24 @@ export const reqGetUserAddress = () => requests({
     method: 'get'
 })
 // 获取商品清单
-export const reqGetOrderInfo = () =>requests({
+export const reqGetOrderInfo = () => requests({
     url: '/order/auth/trade',
+    method: 'get'
+})
+// 提交订单
+export const reqSubmitOrder = (tradeNo, data) => requests({
+    url: `/order/auth/submitOrder?tradeNo=${tradeNo}`,
+    method: 'post',
+    data,
+})
+// 获取订单支付信息
+export const reqPayInfo = (orderId) => requests({
+    url: `/payment/weixin/createNative/${orderId}`,
+    method: 'get'
+})
+// 查询支付状态
+export const reqPayStatus = (orderId) => requests({
+    url: `/payment/weixin/queryPayStatus/${orderId}`,
     method: 'get'
 })
 //13700000000 111111

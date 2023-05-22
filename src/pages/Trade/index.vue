@@ -4,7 +4,7 @@
     <div class="content">
       <h5 class="receive">收件人信息</h5>
       <div class="address clearFix" v-for="userAddress in userAddressList" :key="userAddress.id">
-        <span class="username" :class="{selected: userAddress.isDefault === '1'}">{{ userAddress.consignee }}</span>
+        <span class="username" :class="{ selected: userAddress.isDefault === '1' }">{{ userAddress.consignee }}</span>
         <p @click="changeDefault(userAddress, userAddressList)">
           <span class="s1">{{ userAddress.fullAddress }}</span>
           <span class="s2">{{ userAddress.phoneNum }}</span>
@@ -82,294 +82,315 @@
       </div>
     </div>
     <div class="sub clearFix">
-      <router-link class="subBtn" to="/pay">提交订单</router-link>
+      <a class="subBtn" @click="submitOrder">提交订单</a>
     </div>
   </div>
 </template>
 
 <script>
 import { mapState } from 'vuex'
-  export default {
-    name: 'RTrade',
-    data() {
-      return {
-        msg: ''
+export default {
+  name: 'RTrade',
+  data() {
+    return {
+      msg: '',
+      orderId: ''
+    }
+  },
+  computed: {
+    ...mapState({
+      userAddressList: state => state.trade.userAddressList,
+      orderList: state => state.trade.orderList
+    }),
+    // 最终选择的地址
+    userDefaultAddress() {
+      return this.userAddressList.find(item => item.isDefault === '1') || {}
+    }
+  },
+  methods: {
+    // 选中地址=>默认地址
+    changeDefault(userAddress, userAddressList) {
+      userAddressList.forEach(item => {
+        item.isDefault = '0'
+      })
+      userAddress.isDefault = '1'
+    },
+    // 提交订单
+    async submitOrder() {
+      let { tradeNo } = this.orderList
+      let data = {
+        consignee: this.changeDefault.consignee, // 名
+        consigneeTel: this.changeDefault.phoneNum, // 手机
+        deliveryAddress: this.changeDefault.fullAddress, // 地址
+        paymentWay: "ONLINE", // 支付方式
+        orderComment: this.msg, // 留言
+        orderDetailList: this.orderList.detailArrayList // 清单
       }
-    },
-    computed: {
-      ...mapState({
-        userAddressList: state => state.trade.userAddressList,
-        orderList: state => state.trade.orderList
-      }),
-      // 最终选择的地址
-      userDefaultAddress() {
-        return this.userAddressList.find(item => item.isDefault === '1') || {}
+
+      let result = await this.$API.reqSubmitOrder(tradeNo, data)
+      if (result.status === 200) {
+        this.orderId = result.data.data
+        this.$router.push('/pay?orderId=' + this.orderId)
+      } else {
+        alert(new Error('faile'))
       }
-    },
-    methods: {
-      // 选中地址=>默认地址
-      changeDefault(userAddress, userAddressList) {
-        userAddressList.forEach(item => {
-          item.isDefault = '0'
-        })
-        userAddress.isDefault = '1'
-      }
-    },
-    mounted() {
-      this.$store.dispatch('getUserAddress')
-      this.$store.dispatch('getOrderList')
-    },
-  }
+    }
+  },
+  mounted() {
+    this.$store.dispatch('getUserAddress')
+    this.$store.dispatch('getOrderList')
+  },
+}
 </script>
 
 <style lang="less" scoped>
-  .trade-container {
-    .title {
-      width: 1200px;
-      margin: 0 auto;
-      font-size: 14px;
-      line-height: 21px;
+.trade-container {
+  .title {
+    width: 1200px;
+    margin: 0 auto;
+    font-size: 14px;
+    line-height: 21px;
+  }
+
+  .content {
+    width: 1200px;
+    margin: 10px auto 0;
+    border: 1px solid rgb(221, 221, 221);
+    padding: 25px;
+    box-sizing: border-box;
+
+    .receive,
+    .pay {
+      line-height: 36px;
+      margin: 18px 0;
     }
 
-    .content {
-      width: 1200px;
-      margin: 10px auto 0;
-      border: 1px solid rgb(221, 221, 221);
-      padding: 25px;
-      box-sizing: border-box;
+    .address {
+      padding-left: 20px;
+      margin-bottom: 15px;
 
-      .receive,
-      .pay {
-        line-height: 36px;
-        margin: 18px 0;
+      .username {
+        float: left;
+        width: 100px;
+        height: 30px;
+        line-height: 30px;
+        text-align: center;
+        border: 1px solid #ddd;
+        position: relative;
       }
 
-      .address {
-        padding-left: 20px;
-        margin-bottom: 15px;
+      .username::after {
+        content: "";
+        display: none;
+        width: 13px;
+        height: 13px;
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        background: url(./images/choosed.png) no-repeat;
+      }
 
-        .username {
+      .username.selected {
+        border-color: #e1251b;
+      }
+
+      .username.selected::after {
+        display: block;
+      }
+
+      p {
+        width: 610px;
+        float: left;
+        line-height: 30px;
+        margin-left: 10px;
+        padding-left: 5px;
+        cursor: pointer;
+
+        .s1 {
           float: left;
-          width: 100px;
+
+        }
+
+        .s2 {
+          float: left;
+          margin: 0 5px;
+        }
+
+        .s3 {
+          float: left;
+          width: 56px;
+          height: 24px;
+          line-height: 24px;
+          margin-left: 10px;
+          background-color: #878787;
+          color: #fff;
+          margin-top: 3px;
+          text-align: center;
+        }
+      }
+
+      p:hover {
+        background-color: #ddd;
+      }
+    }
+
+    .line {
+      height: 1px;
+      background-color: #ddd;
+    }
+
+    .way {
+      width: 1080px;
+      height: 110px;
+      background: #f4f4f4;
+      padding: 15px;
+      margin: 0 auto;
+
+      h5 {
+        line-height: 50px;
+      }
+
+      .info {
+        margin-top: 20px;
+
+        .s1 {
+          float: left;
+          border: 1px solid #ddd;
+          width: 120px;
           height: 30px;
           line-height: 30px;
           text-align: center;
-          border: 1px solid #ddd;
-          position: relative;
-        }
-
-        .username::after {
-          content: "";
-          display: none;
-          width: 13px;
-          height: 13px;
-          position: absolute;
-          right: 0;
-          bottom: 0;
-          background: url(./images/choosed.png) no-repeat;
-        }
-
-        .username.selected {
-          border-color: #e1251b;
-        }
-
-        .username.selected::after {
-          display: block;
+          margin-right: 10px;
         }
 
         p {
-          width: 610px;
-          float: left;
           line-height: 30px;
-          margin-left: 10px;
-          padding-left: 5px;
-          cursor: pointer;
-
-          .s1 {
-            float: left;
-
-          }
-
-          .s2 {
-            float: left;
-            margin: 0 5px;
-          }
-
-          .s3 {
-            float: left;
-            width: 56px;
-            height: 24px;
-            line-height: 24px;
-            margin-left: 10px;
-            background-color: #878787;
-            color: #fff;
-            margin-top: 3px;
-            text-align: center;
-          }
-        }
-
-        p:hover {
-          background-color: #ddd;
-        }
-      }
-
-      .line {
-        height: 1px;
-        background-color: #ddd;
-      }
-
-      .way {
-        width: 1080px;
-        height: 110px;
-        background: #f4f4f4;
-        padding: 15px;
-        margin: 0 auto;
-
-        h5 {
-          line-height: 50px;
-        }
-
-        .info {
-          margin-top: 20px;
-
-          .s1 {
-            float: left;
-            border: 1px solid #ddd;
-            width: 120px;
-            height: 30px;
-            line-height: 30px;
-            text-align: center;
-            margin-right: 10px;
-          }
-
-          p {
-            line-height: 30px;
-          }
-        }
-      }
-
-      .detail {
-        width: 1080px;
-
-        background: #feedef;
-        padding: 15px;
-        margin: 2px auto 0;
-
-        h5 {
-          line-height: 50px;
-        }
-
-        .list {
-          display: flex;
-          justify-content: space-between;
-
-          li {
-            line-height: 30px;
-
-            p {
-
-              margin-bottom: 20px;
-            }
-
-            h4 {
-              color: #c81623;
-              font-weight: 400;
-            }
-
-            h3 {
-              color: #e12228;
-            }
-          }
-        }
-      }
-
-      .bbs {
-        margin-bottom: 15px;
-
-        h5 {
-          line-height: 50px;
-        }
-
-        textarea {
-          width: 100%;
-          border-color: #e4e2e2;
-          line-height: 1.8;
-          outline: none;
-          resize: none;
-        }
-      }
-
-      .bill {
-        h5 {
-          line-height: 50px;
-        }
-
-        div {
-          padding-left: 15px;
         }
       }
     }
 
-    .money {
-      width: 1200px;
-      margin: 20px auto;
+    .detail {
+      width: 1080px;
 
-      ul {
-        width: 220px;
-        float: right;
+      background: #feedef;
+      padding: 15px;
+      margin: 2px auto 0;
+
+      h5 {
+        line-height: 50px;
+      }
+
+      .list {
+        display: flex;
+        justify-content: space-between;
 
         li {
           line-height: 30px;
-          display: flex;
-          justify-content: space-between;
 
-          i {
-            color: red;
+          p {
+
+            margin-bottom: 20px;
+          }
+
+          h4 {
+            color: #c81623;
+            font-weight: 400;
+          }
+
+          h3 {
+            color: #e12228;
           }
         }
       }
     }
 
-    .trade {
-      box-sizing: border-box;
-      width: 1200px;
-      padding: 10px;
-      margin: 10px auto;
-      text-align: right;
-      background-color: #f4f4f4;
-      border: 1px solid #ddd;
+    .bbs {
+      margin-bottom: 15px;
+
+      h5 {
+        line-height: 50px;
+      }
+
+      textarea {
+        width: 100%;
+        border-color: #e4e2e2;
+        line-height: 1.8;
+        outline: none;
+        resize: none;
+      }
+    }
+
+    .bill {
+      h5 {
+        line-height: 50px;
+      }
 
       div {
-        line-height: 30px;
-      }
-
-      .price span {
-        color: #e12228;
-        font-weight: 700;
-        font-size: 14px;
-      }
-
-      .receiveInfo {
-        color: #999;
+        padding-left: 15px;
       }
     }
-
-    .sub {
-      width: 1200px;
-      margin: 0 auto 10px;
-
-      .subBtn {
-        float: right;
-        width: 164px;
-        height: 56px;
-        font: 700 18px "微软雅黑";
-        line-height: 56px;
-        text-align: center;
-        color: #fff;
-        background-color: #e1251b;
-
-      }
-    }
-
   }
+
+  .money {
+    width: 1200px;
+    margin: 20px auto;
+
+    ul {
+      width: 220px;
+      float: right;
+
+      li {
+        line-height: 30px;
+        display: flex;
+        justify-content: space-between;
+
+        i {
+          color: red;
+        }
+      }
+    }
+  }
+
+  .trade {
+    box-sizing: border-box;
+    width: 1200px;
+    padding: 10px;
+    margin: 10px auto;
+    text-align: right;
+    background-color: #f4f4f4;
+    border: 1px solid #ddd;
+
+    div {
+      line-height: 30px;
+    }
+
+    .price span {
+      color: #e12228;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .receiveInfo {
+      color: #999;
+    }
+  }
+
+  .sub {
+    width: 1200px;
+    margin: 0 auto 10px;
+
+    .subBtn {
+      float: right;
+      width: 164px;
+      height: 56px;
+      font: 700 18px "微软雅黑";
+      line-height: 56px;
+      text-align: center;
+      color: #fff;
+      background-color: #e1251b;
+
+    }
+  }
+
+}
 </style>

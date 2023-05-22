@@ -1,67 +1,111 @@
-import Home from '@/pages/Home/RHome.vue'
-import Search from '@/pages/Search/RSearch.vue'
-import Register from '@/pages/Register'
-import Login from '@/pages/Login'
-import Detail from '@/pages/Detail'
-import AddCartSuccess from '@/pages/AddCartSuccess'
-import ShopCart from '@/pages/ShopCart'
-import Trade from '@/pages/Trade'
+// 一级路由组件
+import Home from "@/pages/Home/RHome.vue";
+import Search from "@/pages/Search/RSearch.vue";
+import Register from "@/pages/Register";
+import Login from "@/pages/Login";
+import Detail from "@/pages/Detail";
+import AddCartSuccess from "@/pages/AddCartSuccess";
+import ShopCart from "@/pages/ShopCart";
+import Trade from "@/pages/Trade";
+import Pay from "@/pages/Pay";
+import PaySuccess from "@/pages/PaySuccess";
+import Center from "@/pages/Center";
+// 二级路由组件
+import MyOrder from "@/pages/Center/myOrder";
+import GroupOrder from "@/pages/Center/groupOrder";
 /* 
 所有静态路由配置的数组
 */
 export default [
   {
-    path: '/',
+    path: "/",
     component: Home,
-    meta: {show: true},
-    name: 'home'
+    meta: { show: true },
+    name: "home",
   },
 
   {
     // :keyword是个占位
-    path: '/search/:keyword?',
+    path: "/search/:keyword?",
     component: Search,
-    meta: {show: true},
+    meta: { show: true },
     name: "search",
   },
 
   {
-    path: '/register',
+    path: "/register",
     component: Register,
-    meta: {show: false}
+    meta: { show: false },
   },
 
   {
-    path: '/login',
+    path: "/login",
     component: Login,
-    meta: {show: false}
+    meta: { show: false },
   },
 
   {
-    path: '/detail/:skuId',
+    path: "/detail/:skuId",
     component: Detail,
-    meta: {show: true},
-    name: 'detail'
+    meta: { show: true },
+    name: "detail",
   },
 
   {
-    path: '/addCartSuccess',
+    path: "/addCartSuccess",
     component: AddCartSuccess,
-    meta: {show: true},
-    name: 'addCartSuccess'
+    meta: { show: true },
+    name: "addCartSuccess",
   },
 
   {
-    path: '/shopCart',
+    path: "/shopCart",
     component: ShopCart,
-    meta: {show: true},
-    name: 'shopCart'
+    meta: { show: true },
+    name: "shopCart",
   },
 
   {
-    path: '/trade',
+    path: "/trade",
     component: Trade,
-    meta: {show: true},
-    name: 'trade'
-  }
-]
+    meta: { show: true },
+    name: "trade",
+  },
+
+  {
+    path: "/pay",
+    component: Pay,
+    meta: { show: true },
+    name: "pay",
+  },
+
+  {
+    path: "/paysuccess",
+    component: PaySuccess,
+    meta: { show: true },
+    name: "paysuccess",
+  },
+
+  {
+    path: "/center",
+    component: Center,
+    meta: { show: true },
+    name: "center",
+    children: [
+      {
+        path: "grouporder",
+        component: GroupOrder,
+      },
+
+      {
+        path: "myorder",
+        component: MyOrder,
+      },
+
+      {
+        path: '/center',
+        redirect: '/center/myorder' // 重定向
+      }
+    ],
+  },
+];
