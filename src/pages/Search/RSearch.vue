@@ -53,13 +53,13 @@
                     <a href="item.html" target="_blank">
                       <!-- 声明式导航，模板字符串带着id参数跳转，切记切记 -->
                       <router-link :to="`/detail/${good.id}`">
-                        <img :src="good.defaultImg" />
+                        <img v-lazy="good.defaultImg" />
                       </router-link>
                     </a>
                   </div>
                   <div class="price">
                     <strong>
-                      <em>¥</em>
+                      <em>¥&nbsp;</em>
                       <i>{{ good.price }}</i>
                     </strong>
                   </div>
