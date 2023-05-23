@@ -40,7 +40,7 @@ export default {
         // 获取floor组件的数据
         this.$store.dispatch('getFloorList')
         // 获取用户信息
-        this.$store.dispatch('getUserInfo')
+        // this.$store.dispatch('getUserInfo')
     },
     computed: {
         ...mapState({

@@ -70,6 +70,14 @@ export default [
     component: Trade,
     meta: { show: true },
     name: "trade",
+    // 路由独享守卫
+    beforeEnter: (to, from, next) => {
+      if (from.path === '/shopCart') {
+        next()
+      } else {
+        next(false)
+      }
+    }
   },
 
   {
@@ -77,6 +85,13 @@ export default [
     component: Pay,
     meta: { show: true },
     name: "pay",
+    beforeEnter: (to, from, next) => {
+      if (from.path === '/trade') {
+        next()
+      } else {
+        next(false)
+      }
+    }
   },
 
   {

@@ -44,6 +44,7 @@ const actions = {
             commit('GETUSERINFO', result.data)
             return 'ok'
         } else {
+            console.log('未登录')
             return  Promise.reject(new Error('faile'))
         }
     },

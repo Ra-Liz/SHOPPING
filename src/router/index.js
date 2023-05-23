@@ -34,7 +34,7 @@ let router =  new VueRouter({
   }
 })
 
-// 前置守卫
+// 前置守卫-全局路由守卫
 router.beforeEach(async(to, from, next) => {
   // 放路由守卫里面，路由守卫主要关注三个东西，token有没有，token过没过期，有没有用户信息
   // 如果token没有，那就是游客状态，禁止访问一些页面；如果token有，看看有没有用户信息
@@ -42,28 +42,31 @@ router.beforeEach(async(to, from, next) => {
   // 获取用户登录凭证
   let token = localStorage.getItem('TOKEN')
   let name = store.state.user.userInfo.name
-  if (token) {
+  if (token !== null) {
     // 用户登录后不能访问/login
     if (to.path === '/login' || to.path === '/register') {
       next('/') 
     } else { 
-      if (name) { // 登录且有用户信息，放行
+      if (name !== undefined) { // 登录且有用户信息，放行
         next()  
       } else { // 登录但无用户信息
         try{ // 发请求获取用户信息成功后，放行
           await store.dispatch('getUserInfo') 
-          console.log('请求到了用户信息')
           next()
         } catch(error) { // token失效，清除重新登陆
-          console.log('请求用户信息失败了')
+          alert('用户验证已过期，请重新登陆!')
           await store.dispatch('userLogout')
-          console.log('用户退出登录一下')
           next('/login')
         }
       }
     }
-  } else { // 未登录
-    next()
+  } else { // 未登录,支付和个人信息无法访问
+    let toPath = to.path
+    if (toPath.includes('/myorder') || toPath.includes('/center') || toPath.includes('/paysuccess') || toPath.includes('/trade') || toPath.includes('/pay')) {
+      next('/login?redirect=' + toPath)
+    } else {
+      next()
+    }
   }
 }) 
 

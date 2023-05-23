@@ -80,7 +80,9 @@
         const {phone, password} = this;
         try{ // 登陆成功
           (phone && password) && await this.$store.dispatch('userLogin', {phone, password})
-          this.$router.push('/')
+          // 跳转到对应位置/首页
+          let toPath = this.$route.query.redirect || '/'
+          this.$router.push(toPath)
         } catch(error) {
           alert(error.mesasge)
         }
