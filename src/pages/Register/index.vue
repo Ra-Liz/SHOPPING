@@ -8,27 +8,32 @@
       </h3>
       <div class="content">
         <label>手机号:</label>
-        <input type="text" placeholder="11位数字" v-model="phone" name="phone" v-validate="{required: true, regex: /^1\d{10}$/}" :class="{invalid: errors.has('phone')}" >
+        <input type="text" placeholder="11位数字" v-model="phone" name="phone"
+          v-validate="{ required: true, regex: /^1\d{10}$/ }" :class="{ invalid: errors.has('phone') }">
         <span class="error-msg">{{ errors.first('phone') }}</span>
       </div>
       <div class="content">
         <label>验证码:</label>
-        <input type="text" placeholder="点击获取" :value="code" name="code" v-validate="{required: true, regex: /^1\d{6}$/}" :class="{invalid: errors.has('code')}" >
+        <input type="text" placeholder="点击获取" v-model="vertifyCode" name="code" 
+          v-validate="{ required: true, regex: /^\d{6}$/ }" :class="{ invalid: errors.has('code') }">
         <button class="btn-vertify" @click="getVertifyCode">获取验证码</button>
         <span class="error-msg">{{ errors.first('code') }}</span>
       </div>
       <div class="content">
         <label>登录密码:</label>
-        <input type="password" placeholder="登录密码" v-model="password" name="password" v-validate="{required: true, regex: /^1[0-9A-Za-z]{6, 8}$/}" :class="{invalid: errors.has('password')}" >
+        <input type="password" placeholder="登录密码" v-model="password" name="password"
+          v-validate="{ required: true, regex: /^[0-9A-Za-z]{6,8}$/ }" :class="{ invalid: errors.has('password') }">
         <span class="error-msg">{{ errors.first('password') }}</span>
       </div>
       <div class="content">
         <label>确认密码:</label>
-        <input type="password" placeholder="请与登录密码保持一致" v-model="passwordRe" name="password1" v-validate="{required: true, is: password}" :class="{invalid: errors.has('password1')}" >
+        <input type="password" placeholder="请与登录密码保持一致" v-model="password1" name="password1"
+          v-validate="{ required: true, is: password }" :class="{ invalid: errors.has('password1') }">
         <span class="error-msg">{{ errors.first('password1') }}</span>
       </div>
       <div class="controls">
-        <input type="checkbox" :checked="agree" name="agree" v-validate="{required: true, 'agree': true}" :class="{invalid: errors.has('agree')}" >
+        <input type="checkbox" :checked="agree" name="agree" v-validate="{ required: true, 'agree': true }"
+          :class="{ invalid: errors.has('agree') }">
         <span>同意协议并注册《SHOPPING用户协议》</span>
         <span class="error-msg">{{ errors.first('agree') }}</span>
       </div>
@@ -65,42 +70,37 @@ export default {
       phone: '', // 手机号
       vertifyCode: '', // 验证码
       password: '', // 密码
-      passwordRe: '', // 重复密码
+      password1: '', // 重复密码
       agree: 1,
     }
   },
   methods: {
     // 验证码
-    async getVertifyCode() { 
+    async getVertifyCode() {
       try {
         const { phone } = this
         phone && (await this.$store.dispatch('getVertifyCode', this.phone))
         this.vertifyCode = this.$store.state.user.vertifyCode
-      } catch (error) { 
-        alert(error.mesasge) 
-      }
-    },
-    // 勾选/取消勾选协议
-    // check(event) {}
-    // 用户完成注册
-    async userRegister() {
-      const {phone, vertifyCode, password, passwordRe, agree} = this
-      try{
-        if (phone && vertifyCode && password && agree && password===passwordRe) {
-          await this.$store.dispatch('userRegister', {phone, vertifyCode, password})
-          this.$router.push('/login')
-        }
-      } catch(error) {
+      } catch (error) {
         alert(error.mesasge)
       }
+    },
+    // 用户完成注册
+    async userRegister() {
+      try {
+        const success = await this.$validator.validateAll();
+
+        if (success) {
+          const { phone, vertifyCode, password } = this;
+          await this.$store.dispatch('userRegister', { phone, vertifyCode, password });
+          this.$router.push('/login');
+        }
+      } catch (error) {
+        alert(error.message);
+      }
     }
+
   },
-  computed: {
-    // 验证码
-    code() { 
-      return this.vertifyCode
-    }
-  }
 }
 </script>
 
@@ -225,4 +225,5 @@ export default {
   height: 38px;
   border: none;
   background-color: antiquewhite;
-}</style>
+}
+</style>
