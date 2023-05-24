@@ -1,25 +1,18 @@
 // 一级路由组件
-import Home from "@/pages/Home/RHome.vue";
-import Search from "@/pages/Search/RSearch.vue";
-import Register from "@/pages/Register";
-import Login from "@/pages/Login";
-import Detail from "@/pages/Detail";
-import AddCartSuccess from "@/pages/AddCartSuccess";
-import ShopCart from "@/pages/ShopCart";
-import Trade from "@/pages/Trade";
-import Pay from "@/pages/Pay";
-import PaySuccess from "@/pages/PaySuccess";
-import Center from "@/pages/Center";
+// import Home from "@/pages/Home/RHome.vue";
+// ....
 // 二级路由组件
-import MyOrder from "@/pages/Center/myOrder";
-import GroupOrder from "@/pages/Center/groupOrder";
+// import MyOrder from "@/pages/Center/myOrder";
+// ....
+
+// 来一波高效的 路由懒加载！
 /* 
 所有静态路由配置的数组
 */
 export default [
   {
     path: "/",
-    component: Home,
+    component: () => import("@/pages/Home/RHome.vue"),
     meta: { show: true },
     name: "home",
   },
@@ -27,47 +20,47 @@ export default [
   {
     // :keyword是个占位
     path: "/search/:keyword?",
-    component: Search,
+    component: () => import("@/pages/Search/RSearch.vue"),
     meta: { show: true },
     name: "search",
   },
 
   {
     path: "/register",
-    component: Register,
+    component: () => import("@/pages/Register"),
     meta: { show: false },
   },
 
   {
     path: "/login",
-    component: Login,
+    component: () => import("@/pages/Login"),
     meta: { show: false },
   },
 
   {
     path: "/detail/:skuId",
-    component: Detail,
+    component: () => import("@/pages/Detail"),
     meta: { show: true },
     name: "detail",
   },
 
   {
     path: "/addCartSuccess",
-    component: AddCartSuccess,
+    component: () => import("@/pages/AddCartSuccess"),
     meta: { show: true },
     name: "addCartSuccess",
   },
 
   {
     path: "/shopCart",
-    component: ShopCart,
+    component: () => import("@/pages/ShopCart"),
     meta: { show: true },
     name: "shopCart",
   },
 
   {
     path: "/trade",
-    component: Trade,
+    component: () => import("@/pages/Trade"),
     meta: { show: true },
     name: "trade",
     // 路由独享守卫
@@ -82,7 +75,7 @@ export default [
 
   {
     path: "/pay",
-    component: Pay,
+    component: () => import("@/pages/Pay"),
     meta: { show: true },
     name: "pay",
     beforeEnter: (to, from, next) => {
@@ -96,25 +89,25 @@ export default [
 
   {
     path: "/paysuccess",
-    component: PaySuccess,
+    component: () => import("@/pages/PaySuccess"),
     meta: { show: true },
     name: "paysuccess",
   },
 
   {
     path: "/center",
-    component: Center,
+    component: () => import("@/pages/Center"),
     meta: { show: true },
     name: "center",
     children: [
       {
         path: "grouporder",
-        component: GroupOrder,
+        component: () => import("@/pages/Center/groupOrder"),
       },
 
       {
         path: "myorder",
-        component: MyOrder,
+        component: () => import("@/pages/Center/myOrder"),
       },
 
       {
