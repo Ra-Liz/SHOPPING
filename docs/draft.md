@@ -1868,7 +1868,7 @@ RSearch.vue
 
 
 
-## 分页器组件-第一场硬仗	
+## 分页器组件
 
 ### 为什么要分页？
 
@@ -2240,17 +2240,170 @@ Input框正整数逻辑
 
 ## 添加购物车
 
+> 往后都差不多的思路，所以文档记录停滞了一下下，现在来补一下后续（感觉大不一样！）
+
+我先做个图片测试，看能不能传图片，光描述的话阅读量太大了。
+
+![image-20230526150042432](../../source/images/draft/image-20230526150042432.png)
+
+## 购物车结算
 
 
 
+## 付款
 
 
 
+## 订单查看
 
 
 
+## 表单验证
 
-（打算做的组件：~~分页~~、跑马灯、面包屑、图片懒加载）
+
+
+## 路由优化
+
+### 项目中守卫应用
+
+咱要保证一些跳转逻辑别太离谱，比如没登录就直接调到交易、交易成功、订单信息界面；如果要访问这些功能页面需要先给到登录服务
+
+主打一个三种守卫都先试了试，最终用的全局。
+
+```js
+router.beforeEach(async(to, from, next) => {
+  let token = localStorage.getItem('TOKEN')
+  let name = store.state.user.userInfo.name
+  if (token !== null) {
+    // 用户登录后不能访问/login
+    if (to.path === '/login' || to.path === '/register') {
+      next('/') 
+    } else { 
+      // 登录且有用户信息，放行
+      if (name !== undefined) { 
+        next()  
+      } else { 
+        // 登录但无用户信息
+        try{ 
+          // 发请求获取用户信息成功后，放行
+          await store.dispatch('getUserInfo') 
+          next()
+        } catch(error) { 
+          // token失效，清除重新登陆
+          alert('用户验证已过期，请重新登陆!')
+          await store.dispatch('userLogout')
+          next('/login')
+        }
+      }
+    }
+  } else { 
+    // 未登录,支付和个人信息无法访问
+    let toPath = to.path
+    if (toPath.includes('/myorder') || toPath.includes('/center') || toPath.includes('/paysuccess') || toPath.includes('/trade') || toPath.includes('/pay')) {
+      next('/login?redirect=' + toPath)
+    } else {
+      next()
+    }
+  }
+}) 
+```
+
+### 三种类型的守卫
+
+#### 全局守卫
+
+在整个Vue生命周期起作用的守卫
+
+钩子：
+
+- beforeEach(to, from, next)：路由切换前调用
+- afterEach(to, from)：路由切换后调用
+- beforeResolve(to, from, next)：路由切换前，但在所有组件内守卫和异步路由组件被解析之后才被调用
+- onError(error)：导航过程发生错误时调用
+
+#### 路由守卫
+
+在路由级别上进行的守卫
+
+```js
+const router = new VueRouter({
+  routes: [
+    {
+      path: '/example',
+      component: ExampleComponent,
+      beforeEnter: (to, from, next) => {
+        // 路由守卫逻辑
+        next();
+      }
+    }
+  ]
+});
+
+```
+
+钩子：
+
+- beforeEnter(to, from, next)：进入某路由前调用
+- beforeRouteUpdate(to, from, next)：路由重复但动参更新时调用
+- beforeRouteLeave(to, from, next)：离开某路由是调用
+
+#### 组件内守卫
+
+在组件级别上进行的守卫
+
+```js
+const MyComponent = {
+  beforeRouteEnter(to, from, next) {
+    // 无法访问组件实例，可以通过next回调延迟加载组件
+    next(vm => {
+      // 在这里可以访问组件实例，执行进入组件后的操作
+    });
+  },
+  beforeRouteUpdate(to, from, next) {
+    // 组件复用时的更新操作
+    next();
+  },
+  beforeRouteLeave(to, from, next) {
+    // 离开组件前的清理操作
+    next();
+  },
+  // ...其他组件选项
+};
+
+```
+
+钩子：
+
+- beforeRouteEnter(to, from, next)：进入组件前调用
+- beforeRouteUpdate(to, from, next)：组件被复用但动参更新时调用
+- beforeRouteLeave(to, from, next)：离开组件路由被确认前调用
+
+### 路由懒加载
+
+这是一种优化技术。路由组件用的时候再加载，提高应用程序初始加载性能。咱只需要动态导入组件，实现路由懒加载。
+
+```js
+const router = new VueRouter({
+  routes: [
+    {
+      path: '/home',
+      component: () => import('./components/Home.vue') // very easy
+    },
+    // ....
+  ]
+});
+
+```
+
+
+
+（项目扩展的话，想加message提示，就比如删除一个面包屑，就会有，或者搜索，有个搜索提示，共搜到多少信息）
+
+（注释格式写不整齐好让人抓狂）
+
+（懒加载真有意思，打算做一个懒加载一切的企划）
+
+（打算做的组件：~~分页~~、跑马灯、面包屑、~~图片~~）
 
 
 
