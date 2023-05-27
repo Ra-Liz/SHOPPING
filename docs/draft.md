@@ -2241,26 +2241,370 @@ Input框正整数逻辑
 ## 添加购物车
 
 > 往后都差不多的思路，所以文档记录停滞了一下下，现在来补一下后续（感觉大不一样！）
+>
+> 我觉得点啥的时候再绑定回调，再派发，再写状态管理，再写对应的API更顺畅一些。
+>
+> 往后就按业务分写吧，每个业务的基本步骤已经很熟悉了。
 
-我先做个图片测试，看能不能传图片，光描述的话阅读量太大了。
+### 拆分静态&配置路由略
 
-![image-20230526150042432](../../source/images/draft/image-20230526150042432.png)
+### 写API
+
+在某商品详情页中点击加入购物车时，我们需要获取到该商品的ID和数量作为参数向服务器发送请求，以便将对应数量的商品加入购物车
+
+```js
+// 将产品添加到购物车中 / 获取更新后的购物车信息
+export const reqAddOrUpdateShopCar = (skuId, skuNum) => requests({
+    url: `/cart/addToCart/${skuId}/${skuNum}`,
+    method: 'post'
+})
+```
+
+加入购物车成功跳转至购物车界面时，我们需要获取购物车商品列表。值得注意的是，我们通过重写request中请求拦截器方式，在请求头中设置了uuid_token字段（后续还有一个TOKEN字段），这样发送请求的时候就可以获取到对应用户的购物车信息。
+
+```js
+// 获取购物车列表数据
+export const reqCartList = () => requests({
+    url: '/cart/cartList',
+    method: 'get'
+})
+// 删除购物车产品数据
+export const reqDeleteCartById = (skuId) => requests({
+    url: `/cart/deleteCart/${skuId}`,
+    method: 'delete'
+})
+// 修改商品选中状态
+export const reqUpdateCheckedById = (skuId, isChecked) => requests({
+    url: `/cart/checkCart/${skuId}/${isChecked}`,
+    method: 'get'
+})
+```
+
+### 写Vuex管理
+
+detail/index.js
+
+```js
+// 加购物车 actions
+async addShopCar(_, {skuId, skuNum}) {
+    console.log(skuId, skuNum) // test
+    let result = await reqAddOrUpdateShopCar(skuId, skuNum)
+    if (result.status === 200) {
+        return 'ok'
+    } else {
+        return Promise.reject(new Error('faile'))
+    }
+}
+```
+
+shopCart/index.js
+
+```js
+const state = {
+    cartList: []
+}
+const actions = {
+    // 获取购物车列表数据
+    async getCartList({commit}) {
+        let result = await reqCartList()
+        if (result.status === 200) {
+            console.log("请求到cartlist的result↓", result)
+            commit('GETCARTLIST', result.data)
+        }
+    },
+    // 删除购物车一个产品
+    async deleteCartById(_, skuId) {
+        let result = await reqDeleteCartById(skuId)
+        if (result.status === 200) {
+            return 'ok'
+        } else {
+            return Promise.reject(new Error('faile'))
+        }
+    },
+    // 删除所有选中商品-多次删除一些产品↑
+    deleteAllChecked({dispatch, getters}) {
+        let PromiseAll = []
+        getters.cartList.cartInfoList.forEach(item => {
+            let promise = item.isChecked === 1 ? dispatch('deleteCartById', item.skuId) : ''
+            PromiseAll.push(promise)
+        })
+        return Promise.all(PromiseAll)
+    },
+    // 修改购物产品选中状态
+    async updateCheckedById(_, {skuId, isChecked}) {
+        let result = await reqUpdateCheckedById(skuId, isChecked)
+        if (result.status === 200) {
+            return 'ok'
+        } else {
+            return Promise.reject(new Error('faile'))
+        }
+    },
+    // 修改所有购物产品选中状态-多次修改一些产品选中状态↑
+    updateAllChecked({dispatch, getters}, checked) {
+        let PromiseAll = []
+        getters.cartList.cartInfoList.forEach(item => {
+            let promise = dispatch('updateCheckedById', {skuId: item.skuId, isChecked: checked})
+            PromiseAll.push(promise)
+        })
+        return Promise.all(PromiseAll)
+    }
+}
+const mutations = {
+    GETCARTLIST(state, cartList) {
+        state.cartList = cartList.data
+    },
+}
+const getters = {
+    cartList(state) {
+        return state.cartList[0] || {}
+    }
+}
+....
+```
+
+### 派发actions&&动态展示数据
+
+基本数据展示就不说了，循环一下，该插值插值，该判断判断。
+
+#### 跳转到购物车
+
+商品详情页面“加入购物车”按钮绑定事件，回调派发加入购物车actions，成功则跳转购物车页面，失败提示
+
+```js
+// 加购物车
+async addShopCar() {
+  try{ // 派发请求并获取成功：路由跳转
+    await this.$store.dispatch('addShopCar', {skuId: this.$route.params.skuId, skuNum: this.skuNum})
+    sessionStorage.setItem('SKUINFO', JSON.stringify(this.skuInfo))
+    this.$router.push({name: 'addCartSuccess', query: {skuNum: this.skuNum}})
+  } catch (error) {
+    alert(error.message)
+  }
+},
+```
+
+购物车界面挂载时派发一次获取购物车信息请求，如若有其他修改，再次派发（那么这个派发方法确实需要单独拿到methods中）
+
+```js
+methods: {
+    getData() {
+      this.$store.dispatch('getCartList')
+    },
+},
+mounted() {
+    this.getData()
+},    
+```
+
+#### 购物车操作
+
+还有一些操作：
+
+一个是修改商品的数量，一个是删除商品，还有一个是修改产品选中状态，还有是全选/全不选，还有删除全部已选中的商品。
+
+这几个操作是有联系的：
+
+首先修改后需要重新获取一下购物车商品信息（在actions中遍历）；
+
+其次删除选中所有商品 = 多次删除单个商品（在actions中遍历）；
+
+而且全选/取消全选 = 多次选中/取消选中。
+
+##### 修改商品数量
+
+```vue
+<template>
+    <li class="cart-list-con5">
+        <a href="javascript:void(0)" class="mins" @click="handler('mins', -1, cart)">-</a>
+        <input autocomplete="off" type="text" :value="cart.skuNum" minnum="1" class="itxt"
+          @change="handler('change', $event.target.value * 1, cart)">
+        <a href="javascript:void(0)" class="plus" @click="handler('plus', 1, cart)">+</a>
+    </li>
+</template>
+<script>
+    // 商品数量操作，这里有加减和修改数据三种情况，判断一下，返回值的时候做一些过滤，一定要给到正整数
+    // 为了防止出现点击过快，跟不上请求，出现负数的情况，用了节流包装
+    handler: throttle(async function(type, disNum, cart) {
+      // 更改商品数量
+      if (type === 'plus') {
+        disNum = 1
+      } else if (type === 'mins') {
+        disNum = cart.skuNum > 1 ? -1 : 0
+      } else {
+        disNum = (isNaN(disNum) || disNum < 1) ? 0 : (Math.floor(disNum) - cart.skuNum)
+      }
+      // 派发更改请求
+      try {
+        // 这里蛮有意思，跳转前使用这个加商品的，修改数量也用这个请求，传入的是商品ID和差值。
+        await this.$store.dispatch('addShopCar', { skuId: cart.skuId, skuNum: disNum }) 
+        this.getData()
+      } catch (error) {
+        alert(error)
+      }
+    }, 500),
+</script>
+```
+
+##### 选中/取消&&全选/全不选
+
+```js
+// 修改产品选中状态
+async updateChecked(cart, event) {
+  console.log(cart.isChecked)
+  let checked = event.target.checked ? 1 : 0
+  try{
+    await this.$store.dispatch('updateCheckedById', {skuId: cart.skuId, isChecked: checked})
+    this.getData()
+  } catch (error) {
+    alert(error.message)
+  }
+},
+// 全选/全不选
+async updateAllChecked(event) {
+  let checked = event.target.checked ? 1 : 0
+  try{
+    await this.$store.dispatch('updateAllChecked', checked)
+    this.getData()
+  } catch(error) {
+    alert(error.message)
+  }
+}
+```
+
+##### 删除/删除选中的所有
+
+```js
+// 删除产品操作
+async deleteCartById(cart) {
+  try{
+    console.log(cart.skuId)
+    await this.$store.dispatch('deleteCartById', cart.skuId)
+    this.getData()
+  } catch (error) {
+    alert(error.message)
+  }
+},
+// 删除所有选中产品
+async deleteAllChecked() {
+  try{
+    await this.$store.dispatch('deleteAllChecked')
+    this.getData()
+  } catch(error) {
+    alert(error.message)
+  }
+},
+```
+
+## 用户注册登录-可恶竟然插在这个地方！
+
+### API
+
+```js
+// 获取验证码
+export const reqGetVertifyCode = (phone) => requests({
+    url: `/user/passport/sendCode/${phone}`,
+    method: 'get'
+})
+// 用户注册
+export const reqUserRegister = (params) => requests({
+    url: '/user/passport/register',
+    method: 'post',
+    data: params
+})
+// 用户登录
+export const reqUserLogin = (params) => requests({
+    url: '/user/passport/login',
+    method: 'post',
+    data: params
+})
+// 获取用户信息
+export const reqUserInfo = () => requests({
+    url: '/user/passport/auth/getUserInfo',
+    method: 'get'
+})
+// 用户退出登录
+export const reqUserLogout = () => requests({
+    url: '/user/passport/logout',
+    method: 'get'
+})
+// 获取用户地址信息
+export const reqGetUserAddress = () => requests({
+    url: '/user/userAddress/auth/findUserAddressList',
+    method: 'get'
+})
+```
+
+### 状态管理
+
+主要想强调一下token的长效存储。规范一点的话，存入了localStorage的token在mutations中被赋值给state中的token字段以便拿着去获取用户信息；在随后的退出操作中，localStorage的token也在mutations中被删除，以便安全清除用户数据。
+
+但是我直接`localStorage.setItem/getItem/rmeoveItem`了hhh，不妙哦
+
+
+
+
 
 ## 购物车结算
+
+> 还是这样写吧，来回切换太麻烦了qvq好懒好懒
+
+### 拆分静态&配置路由
+
+
+
+### 写API
+
+
+
+### 写Vuex管理
+
+
+
+### 动态展示数据&&派发actions
 
 
 
 ## 付款
 
+### 拆分静态&配置路由
+
+
+
+### 写API
+
+
+
+### 写Vuex管理
+
+
+
+### 动态展示数据&&派发actions
+
 
 
 ## 订单查看
+
+### 拆分静态&配置路由
+
+
+
+### 写API
+
+
+
+### 写Vuex管理
+
+
+
+### 动态展示数据&&派发actions
 
 
 
 ## 表单验证
 
+小的手写即可，大的用这个包很不戳
 
+vee-validate
 
 ## 路由优化
 
@@ -2300,7 +2644,7 @@ router.beforeEach(async(to, from, next) => {
     // 未登录,支付和个人信息无法访问
     let toPath = to.path
     if (toPath.includes('/myorder') || toPath.includes('/center') || toPath.includes('/paysuccess') || toPath.includes('/trade') || toPath.includes('/pay')) {
-      next('/login?redirect=' + toPath)
+      next('/login?redirect=' + toPath)// 这个地方蛮有意思！就是做完登录操作后再跳转到之前被截停的位置！！
     } else {
       next()
     }

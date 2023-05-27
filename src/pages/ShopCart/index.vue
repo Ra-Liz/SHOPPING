@@ -84,7 +84,6 @@ export default {
       } else {
         disNum = (isNaN(disNum) || disNum < 1) ? 0 : (Math.floor(disNum) - cart.skuNum)
       }
-      console.log(disNum)
       // 派发更改请求
       try {
         await this.$store.dispatch('addShopCar', { skuId: cart.skuId, skuNum: disNum })
@@ -103,24 +102,23 @@ export default {
         alert(error.message)
       }
     },
-    // 修改产品选中状态
-    async updateChecked(cart, event) {
-      console.log(cart.isChecked)
-      let checked = event.target.checked ? 1 : 0
-      console.log(checked)
-      try{
-        await this.$store.dispatch('updateCheckedById', {skuId: cart.skuId, isChecked: checked})
-        this.getData()
-      } catch (error) {
-        alert(error.message)
-      }
-    },
     // 删除所有选中产品
     async deleteAllChecked() {
       try{
         await this.$store.dispatch('deleteAllChecked')
         this.getData()
       } catch(error) {
+        alert(error.message)
+      }
+    },
+    // 修改产品选中状态
+    async updateChecked(cart, event) {
+      console.log(cart.isChecked)
+      let checked = event.target.checked ? 1 : 0
+      try{
+        await this.$store.dispatch('updateCheckedById', {skuId: cart.skuId, isChecked: checked})
+        this.getData()
+      } catch (error) {
         alert(error.message)
       }
     },
