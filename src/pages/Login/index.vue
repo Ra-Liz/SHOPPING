@@ -74,11 +74,11 @@
         password: ''
       }
     },
-    // 账号密码： 1,1
     methods: {
       async userLogin() {
         const {phone, password} = this;
-        try{ // 登陆成功
+        try{ 
+          // 登陆成功
           (phone && password) && await this.$store.dispatch('userLogin', {phone, password})
           // 跳转到对应位置/首页
           let toPath = this.$route.query.redirect || '/'

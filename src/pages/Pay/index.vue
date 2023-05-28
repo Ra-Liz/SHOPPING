@@ -130,13 +130,13 @@ export default {
               clearInterval(this.timer)
               this.timer = null
               done()
-              this.$router.push('/paysuccess')
+              this.paySuccess()
             } else {
               alert('我没太有钱，所以假装支付成功一下，这里主要是一个判断，如果code=200就是支付成功，真用的话删一下else中操作')
               clearInterval(this.timer)
               this.timer = null
               done()
-              this.$router.push('/paysuccess')
+              this.paySuccess()
             }
             
           }
@@ -152,7 +152,7 @@ export default {
             clearInterval(this.timer)
             this.timer = null
             this.$msgbox.close()
-            this.$router.push('/paysuccess')
+            this.paySuccess()
           }
         }, 1000)
       }

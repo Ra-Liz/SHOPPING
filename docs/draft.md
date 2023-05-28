@@ -2540,71 +2540,459 @@ export const reqGetUserAddress = () => requests({
 
 但是我直接`localStorage.setItem/getItem/rmeoveItem`了hhh，不妙哦
 
+这一块建议把↑放在新开的utils目录中token.js文件中，使用时引入调用方法。（与下文本人实现方法无关）
 
+```js
+....
+const state = {
+    vertifyCode: '',
+    userInfo: {},
+}
+const actions = {
+    // 获取验证码
+    async getVertifyCode({commit}, phone) {
+        let result = await reqGetVertifyCode(phone)
+        if (result.status === 200) {
+            commit('GETVERTIFYCODE', result.data)
+            return 'ok'
+        } else {
+            return Promise.reject(new Error('faile'))
+        }
+    },
+    // 用户注册
+    async userRegister(_, user) {
+        let result = await reqUserRegister(user)
+        if (result.status === 200) {
+            return 'ok'
+        } else {
+            return Promise.reject(new Error('faile'))
+        }
+    },
+    // 用户登录
+    async userLogin(_, user) {
+        let result = await reqUserLogin(user)
+        if (result.status === 200) {
+            console.log('用户登录', result.data)
+            let token = result.data.data.token
+            localStorage.setItem('TOKEN', token)
+            return 'ok'
+        } else {
+            return Promise.reject(new Error('faile'))
+        }
+    },
+    // 获取用户信息
+    async getUserInfo({commit}) {
+        let result = await reqUserInfo()
+        if (result.data.code === 200) {
+            console.log('用户信息', result.data)
+            commit('GETUSERINFO', result.data)
+            return 'ok'
+        } else {
+            console.log('未登录')
+            return  Promise.reject(new Error('faile'))
+        }
+    },
+    // 用户退出登录
+    async userLogout({commit}) {
+        let result = await reqUserLogout()
+        if (result.status === 200) {
+            console.log('退出请求', result)
+            commit('CLEAR') // 去清除用户数据
+            return 'ok'
+        } else {
+            return Promise.reject(new Error('faile'))
+        }
+    },
+}
+const mutations = {
+    GETVERTIFYCODE(state, vertifyCode) {
+        state.vertifyCode = vertifyCode.data
+    },
+    GETUSERINFO(state, userInfo) {
+        state.userInfo = userInfo.data
+    },
+    CLEAR(state) {
+        state.userInfo = {}
+        state.vertifyCode = ''
+        localStorage.removeItem('TOKEN')
+    },
+}
+....
+```
 
+### 展示&&派发
 
+这里的手机/邮箱验证码业务没有真正实现，但是这个业务好有趣！一定要真正搞一下！
+
+登录：传{电话，密码}发验证请求，验证成功则登陆成功，失败提示。
+
+```js
+methods: {
+  async userLogin() {
+    const {phone, password} = this;
+    try{ // 登陆成功
+      (phone && password) && await this.$store.dispatch('userLogin', {phone, password})
+      // 跳转到对应位置/首页
+      let toPath = this.$route.query.redirect || '/'
+      this.$router.push(toPath)
+    } catch(error) {
+      alert(error.mesasge)
+    }
+  }
+},
+```
+
+注册：验证表单信息合法性，全部合法注册成功，失败提示。
+
+```js
+methods: {
+// 验证码
+async getVertifyCode() {
+  try {
+    const { phone } = this
+    phone && (await this.$store.dispatch('getVertifyCode', this.phone))
+    this.vertifyCode = this.$store.state.user.vertifyCode
+  } catch (error) {
+    alert(error.mesasge)
+  }
+},
+// 用户完成注册
+async userRegister() {
+  try {
+    const success = await this.$validator.validateAll(); // vee-validate
+
+    if (success) {
+      const { phone, vertifyCode, password } = this;
+      await this.$store.dispatch('userRegister', { phone, vertifyCode, password });
+      this.$router.push('/login');
+    }
+  } catch (error) {
+    alert(error.message);
+  }
+}
+},
+```
 
 ## 购物车结算
 
 > 还是这样写吧，来回切换太麻烦了qvq好懒好懒
 
-### 拆分静态&配置路由
+### 写API&&Vuex管理
 
+api
 
+```js
+// 获取用户地址信息
+export const reqGetUserAddress = () => requests({
+    url: '/user/userAddress/auth/findUserAddressList',
+    method: 'get'
+})
+// 获取商品清单
+export const reqGetOrderInfo = () => requests({
+    url: '/order/auth/trade',
+    method: 'get'
+})
+```
 
-### 写API
+vuex
 
-
-
-### 写Vuex管理
-
-
+```js
+const state = {
+    userAddressList: [], // 用户地址信息
+    orderList: {} // 商品清单
+}
+const actions = {
+    // 获取用户地址信息
+    async getUserAddress({commit}) {
+        let result = await reqGetUserAddress()
+        if (result.status === 200) {
+            commit('GETUSERADDRESS', result.data)
+            return 'ok'
+        } else {
+            return Promise.reject(new Error('faile'))
+        }
+    },
+    // 获取商品清单
+    async getOrderList({commit}) {
+        let result = await reqGetOrderInfo()
+        if (result.status === 200) {
+            commit('GETORDERLIST', result.data)
+            return 'ok'
+        } else {
+            return Promise.reject(new Error('faile'))
+        }
+    }
+}
+const mutations = {
+    GETUSERADDRESS(state, userAddressList) {
+        state.userAddressList = userAddressList.data
+    },
+    GETORDERLIST(state, orderList) {
+        state.orderList = orderList.data
+    }
+}
+```
 
 ### 动态展示数据&&派发actions
 
+业务0-挂载的时候拿到地址信息和商品清单
 
+小业务1-修改默认地址
+
+```vue
+<div class="address clearFix" v-for="userAddress in userAddressList" :key="userAddress.id">
+    <span class="username" :class="{ selected: userAddress.isDefault === '1' }">{{ userAddress.consignee }}</span>
+    <!-- 排他排他~ -->
+    <p @click="changeDefault(userAddress, userAddressList)">
+      <span class="s1">{{ userAddress.fullAddress }}</span>
+      <span class="s2">{{ userAddress.phoneNum }}</span>
+      <span class="s3" v-show="userAddress.isDefault === '1'">默认地址</span>
+    </p>
+</div>
+```
+
+小业务2-提交订单
+
+信息一长串，谨慎赋值
+
+```js
+// 提交订单
+async submitOrder() {
+  let { tradeNo } = this.orderList
+  let data = {
+    consignee: this.changeDefault.consignee, // 名
+    consigneeTel: this.changeDefault.phoneNum, // 手机
+    deliveryAddress: this.changeDefault.fullAddress, // 地址
+    paymentWay: "ONLINE", // 支付方式
+    orderComment: this.msg, // 留言
+    orderDetailList: this.orderList.detailArrayList // 清单
+  }
+
+  let result = await this.$API.reqSubmitOrder(tradeNo, data)
+  if (result.status === 200) {
+    this.orderId = result.data.data
+    this.$router.push('/pay?orderId=' + this.orderId)
+  } else {
+    alert(new Error('faile'))
+  }
+}
+```
 
 ## 付款
 
 ### 拆分静态&配置路由
 
+牛牛！这里按需引入了饿了么MessageBox和Button
 
+```js
+// 按需引入elementUI
+import { Button, MessageBox } from 'element-ui'
+Vue.component(Button.name, Button)
+Vue.prototype.$msgbox = MessageBox
+Vue.prototype.$alert = MessageBox.alert
+```
 
-### 写API
+### 配置及派发
 
+```js
+async open() {
+  // 生成二维码
+  let url = await QRcode.toDataURL(this.payInfo.codeUrl)
+  // 弹框搞出来
+  this.$alert(`<img src=${url} />`, '扫码支付', {
+    dangerouslyUseHTMLString: true,
+    center: true,
+    showCancelButton: true,
+    cancelButtonText: '支付遇到问题',
+    showConfirmButton: true,
+    confirmButtonText: '支付成功',
+    showClose: false,
+    beforeClose:(type, instance, done) => {
+      if (type === 'cancel') {
+        alert('非常抱歉！支付失败！请重试！')
+        clearInterval(this.timer)
+        this.timer = null
+        done()
+      } else {
+        if (this.code === 200) {
+          alert('真支付成功咧')
+          clearInterval(this.timer)
+          this.timer = null
+          done()
+          this.paySuccess()
+        } else {
+          alert('我没太有钱，所以假装支付成功一下，这里主要是一个判断，如果code=200就是支付成功，真用的话删一下else中操作')
+          clearInterval(this.timer)
+          this.timer = null
+          done()
+          this.paySuccess()
+        }
 
+      }
+    },
+  })
 
-### 写Vuex管理
+  if (!this.timer) {
+    // 开定时器，每隔一秒发一次请求获取支付状态
+    this.timer = setInterval(async() => {
+      let result = await this.$API.reqPayStatus(this.orderId)
+      this.code = result.data.code
+      if (this.code === 200) {
+        clearInterval(this.timer)
+        this.timer = null
+        this.$msgbox.close()
+        this.paySuccess()
+      }
+    }, 1000)
+  }
+},
+```
 
+### api
 
+```js
+// 获取订单支付信息-挂载的时候用
+export const reqPayInfo = (orderId) => requests({
+    url: `/payment/weixin/createNative/${orderId}`,
+    method: 'get'
+})
+// 查询支付状态-定时器发请求的时候用
+export const reqPayStatus = (orderId) => requests({
+    url: `/payment/weixin/queryPayStatus/${orderId}`,
+    method: 'get'
+})
+```
 
-### 动态展示数据&&派发actions
+### 话说不用状态管理怎么派请求？
 
+main.js
 
+```js
+// 请求API
+import * as API from '@/api/index'
+new Vue({
+  render: h => h(App),
+  beforeCreate() {
+    ...
+    Vue.prototype.$API = API
+  },
+  ...
+}).$mount('#app')
+```
+
+用的时候
+
+```js
+this.$API.////
+```
 
 ## 订单查看
 
-### 拆分静态&配置路由
+依旧是挂载的时候获取数据
 
+组件遍历展示
 
+分页器复用
 
-### 写API
+需要注意的是用到了二级路由，以及路由的重定向
 
+```js
+{
+    path: "/center",
+    component: () => import("@/pages/Center"),
+    meta: { show: true },
+    name: "center",
+    children: [
+      {
+        path: "grouporder",
+        component: () => import("@/pages/Center/groupOrder"),
+      },
 
+      {
+        path: "myorder",
+        component: () => import("@/pages/Center/myOrder"),
+      },
 
-### 写Vuex管理
-
-
-
-### 动态展示数据&&派发actions
-
-
+      {
+        path: '/center',
+        redirect: '/center/myorder' // 重定向
+      }
+    ],
+  },
+```
 
 ## 表单验证
 
-小的手写即可，大的用这个包很不戳
+小的手写即可，大的用这个包很不戳vee-validate
 
-vee-validate
+配置plugins/validate.js
+
+```js
+import Vue from "vue";
+import VeeValidate, {Validator} from "vee-validate";
+import zh_CN from "vee-validate/dist/locale/zh_CN";
+Vue.use(VeeValidate);
+
+Validator.localize("zh_CN", {
+  messages: {
+    ...zh_CN.messages,
+    is: (field) => `${field}必须与密码相同`,
+  },
+  attributes: {
+    phone: "手机号码",
+    code: "验证码",
+    password: "密码",
+    password1: "确认密码",
+    agree: "协议",
+  },
+});
+
+// 自定义校验规则
+Validator.extend("agree", {
+  validate: (value) => {
+    return value;
+  },
+  getMessage: (field) => field + "必须同意",
+});
+```
+
+引入
+
+```js
+import '@/plugins/validate'
+```
+
+使用
+
+```vue
+<div class="content">
+    <label>登录密码:</label>
+    <input type="password" placeholder="登录密码" v-model="password" name="password"
+      v-validate="{ required: true, regex: /^[0-9A-Za-z]{6,8}$/ }" :class="{ invalid: errors.has('password') }">
+    <span class="error-msg">{{ errors.first('password') }}</span>
+    </div>
+    <div class="content">
+    <label>确认密码:</label>
+    <input type="password" placeholder="请与登录密码保持一致" v-model="password1" name="password1"
+      v-validate="{ required: true, is: password }" :class="{ invalid: errors.has('password1') }">
+    <span class="error-msg">{{ errors.first('password1') }}</span>
+</div>
+<script>
+    async userRegister() {
+      try {
+        const success = await this.$validator.validateAll();
+
+        if (success) {
+          const { phone, vertifyCode, password } = this;
+          await this.$store.dispatch('userRegister', { phone, vertifyCode, password });
+          this.$router.push('/login');
+        }
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+</script>
+```
 
 ## 路由优化
 
@@ -2748,6 +3136,8 @@ const router = new VueRouter({
 （懒加载真有意思，打算做一个懒加载一切的企划）
 
 （打算做的组件：~~分页~~、跑马灯、面包屑、~~图片~~）
+
+（打算做的事情：验证码业务、服务器）
 
 
 
